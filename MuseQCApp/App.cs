@@ -1,4 +1,5 @@
-﻿using MuseQCApp.Helpers;
+﻿using Microsoft.Extensions.Logging;
+using MuseQCApp.Helpers;
 using MuseQCApp.Interfaces;
 
 namespace MuseQCApp;
@@ -11,6 +12,11 @@ public class App
     /// Helper to access configuration settings
     /// </summary>
     private ConfigHelper ConfigHelper { get; init; }
+
+    /// <summary>
+    /// The logger to use
+    /// </summary>
+    private ILogger Logging { get; init; }
 
     /// <summary>
     /// A module to use to interact with the google bucket
@@ -51,9 +57,10 @@ public class App
     /// <param name="qualityRunner">A module for running the muse quality checks</param>
     /// <param name="qualityReport">A module for creating muse quality reports</param>
     /// <param name="clean">A module for cleaning up the unnecessary files in the file system</param>
-    public App(ConfigHelper configHelper, IGoogleBucket bucket, IFileLocations filePaths, IMuseQualityRunner qualityRunner, IQualityReport qualityReport, ICleanUp clean)
+    public App(ConfigHelper configHelper, ILogger logging, IGoogleBucket bucket, IFileLocations filePaths, IMuseQualityRunner qualityRunner, IQualityReport qualityReport, ICleanUp clean)
     {
         ConfigHelper = configHelper;
+        Logging = logging;
         Bucket = bucket;
         FilePaths = filePaths;
         QualityRunner = qualityRunner;

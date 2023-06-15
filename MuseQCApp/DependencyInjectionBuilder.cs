@@ -1,8 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MuseQCApp.Helpers;
 using MuseQCApp.Interfaces;
 using MuseQCApp.Modules;
+using MuseQCApp.FileLogger;
+using MuseQCApp.Constants;
 
 namespace MuseQCApp;
 
@@ -20,13 +23,34 @@ public class DependencyInjectionBuilder
             //       of the file in a comment. Please check that the expected configuration parameters
             //       are in the appsettings.production.json to ensure everything works as expected.
             services
+                .AddTransient<App>()
+                .AddSingleton<ConfigHelper>()
                 .AddSingleton<IGoogleBucket, GoogleBucket>()
                 .AddSingleton<IFileLocations, FileLocations>()
                 .AddSingleton<ISiteLookup, SiteLookup>()
                 .AddSingleton<IMuseQualityRunner, MuseQualityRunner>()
                 .AddSingleton<IQualityReport, QualityReport>()
                 .AddSingleton<ICleanUp, CleanUp>()
-                .AddSingleton<ConfigHelper>()
-                .AddTransient<App>();
+                .AddLogging(options => {
+                    string documentsDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    string logFileDirectory = Path.Combine(documentsDir, "MuseQCApp", "Logs");
+                    if (Directory.Exists(logFileDirectory) == false)
+                    {
+                        Directory.CreateDirectory(logFileDirectory);
+                    }
+                    string currentdate = DateTime.Now.ToString(DateConstants.DateFormat);
+                    string logFilePath = Path.Combine(logFileDirectory, $"log_{currentdate}.txt");
+
+                    LogLevel minLogLevel = LogLevel.Information;
+                    options.SetMinimumLevel(minLogLevel);
+                    // Add file logger
+                    options.AddFile(logFilePath, new FileLoggerConfiguration()
+                    {
+                        LogLevel = minLogLevel
+                    });
+                })
+                // Add default logger so that ILogger can be retreived and does not need a class type
+                // ie so we can do  GetService<ILogger>() instead of GetService<ILogger<ClassType>>()
+                .AddTransient(provider => provider.GetService<ILoggerFactory>().CreateLogger("MuseQCApp"));
         });
 }
