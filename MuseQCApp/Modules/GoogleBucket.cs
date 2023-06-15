@@ -44,9 +44,40 @@ public class GoogleBucket : IGoogleBucket
 
     #region Implemented interface methods
 
-    public bool DownloadFiles(List<string> filePaths, string storageDirPath)
+    public bool DownloadFiles(List<string> filePaths)
     {
-        throw new NotImplementedException();
+        // Get the edf storage folder path
+        string? edfStorageFolder = ConfigHelper.GetEdfStorageFolderPath();
+        if(edfStorageFolder is null)
+        {
+            return false;
+        }
+
+        // ensure the edf storage folder is created
+        if(Directory.Exists(edfStorageFolder) == false)
+        {
+            Directory.CreateDirectory(edfStorageFolder);
+        }
+
+        // Get process ready
+        Process cmd = CreateDownloadFilesProcess();
+        cmd.Start();
+
+        // Download files
+        foreach(var filePath in filePaths)
+        {
+            string fileName = Path.GetFileName(filePath).Replace(":", "");
+            string path = Path.Combine(edfStorageFolder, fileName);
+            cmd.StandardInput.WriteLine($"gsutil cp \"{filePath}\" \"{path}\"");
+        }
+        
+        // Close connection with command line
+        cmd.StandardInput.Flush();
+        cmd.StandardInput.Close();
+        cmd.WaitForExit();
+
+        // TODO: check that files are actually downloaded
+        return true;
     }
 
     public List<string> GetFilePaths()
@@ -100,8 +131,6 @@ public class GoogleBucket : IGoogleBucket
             StartInfo = new ProcessStartInfo()
             {
                 FileName = "cmd.exe",
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 Arguments = $"/c gsutil ls -l -h {bucketPath}>\"{outputTxtPath}\""
@@ -140,6 +169,24 @@ public class GoogleBucket : IGoogleBucket
 
         Logging.LogInformation($"Read in all eeg files from {outputTxtPath}");
         return eegFiles;
+    }
+
+    /// <summary>
+    /// Creates a process for use with downloading files from the google bucket
+    /// </summary>
+    /// <returns>The process to use</returns>
+    private Process CreateDownloadFilesProcess()
+    {
+        return new Process()
+        {
+            StartInfo = new ProcessStartInfo()
+            {
+                FileName = "cmd.exe",
+                RedirectStandardInput = true,
+                CreateNoWindow = true,
+                UseShellExecute = false,
+            }
+        };
     }
 
     #endregion

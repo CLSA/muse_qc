@@ -80,7 +80,9 @@ public class App
     {
         string appName = AppDomain.CurrentDomain.FriendlyName;
         Logging.LogInformation($"{appName} started running");
-        List<string> pathsOnBucket = Bucket.GetFilePaths();
+
+        //List<string> pathsOnBucket = Bucket.GetFilePaths();
+        //Bucket.DownloadFiles(new List<string>());
 
         Logging.LogInformation($"{appName} done running");
     }

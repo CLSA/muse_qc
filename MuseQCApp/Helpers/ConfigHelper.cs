@@ -66,6 +66,24 @@ public class ConfigHelper
         return Path.Combine(partialDirPath, appName, fileName);
     }
 
+    /// <summary>
+    /// Get the full path to the folder where edf files downloaded from the google bucket
+    /// should be stored
+    /// </summary>
+    /// <returns>The full path</returns>
+    public string? GetEdfStorageFolderPath()
+    {
+        string? folderName = GetStringFromConfig("EdfStorageFolderName");
+        if (folderName is null)
+        {
+            return null;
+        }
+
+        string appName = AppDomain.CurrentDomain.FriendlyName;
+        string partialDirPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        return Path.Combine(partialDirPath, appName, folderName);
+    }
+
     #endregion
 
     #region Private methods

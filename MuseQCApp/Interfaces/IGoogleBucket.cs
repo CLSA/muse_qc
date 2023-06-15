@@ -20,5 +20,5 @@ public interface IGoogleBucket
     /// <param name="filePathsDict">A list of filenames to download</param>
     /// <param name="storageDirPath">The folder to store the downloaded files in</param>
     /// <returns>True if all requested files were downloaded, otherwise false</returns>
-    public bool DownloadFiles(List<string> filePaths, string storageDirPath);
+    public bool DownloadFiles(List<string> filePaths);
 }
