@@ -52,6 +52,7 @@ public class App
     /// Default constructor
     /// </summary>
     /// <param name="configHelper">Helper to access configuration settings</param>
+    /// <param name="logging">The logger to use</param>
     /// <param name="bucket">A module to use to interact with the google bucket</param>
     /// <param name="filePaths">A module to use for making decisions on file locations</param>
     /// <param name="qualityRunner">A module for running the muse quality checks</param>
