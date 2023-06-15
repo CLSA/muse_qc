@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MuseQCApp.Constants;
+using MuseQCApp.FileLogger;
 using MuseQCApp.Helpers;
 using MuseQCApp.Interfaces;
 using MuseQCApp.Modules;
-using MuseQCApp.FileLogger;
-using MuseQCApp.Constants;
 
 namespace MuseQCApp;
 
@@ -33,7 +33,8 @@ public class DependencyInjectionBuilder
                 .AddSingleton<ICleanUp, CleanUp>()
                 .AddLogging(options => {
                     string documentsDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                    string logFileDirectory = Path.Combine(documentsDir, "MuseQCApp", "Logs");
+                    string appName = AppDomain.CurrentDomain.FriendlyName;
+                    string logFileDirectory = Path.Combine(documentsDir, appName, "Logs");
                     if (Directory.Exists(logFileDirectory) == false)
                     {
                         Directory.CreateDirectory(logFileDirectory);

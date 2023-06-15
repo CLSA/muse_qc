@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace MuseQCApp.Helpers;
 
@@ -7,17 +8,82 @@ namespace MuseQCApp.Helpers;
 /// </summary>
 public class ConfigHelper
 {
+    #region private properties
+
     /// <summary>
     /// The configuration settings
     /// </summary>
-    public IConfiguration Configuration { get; init; }
+    private IConfiguration Configuration { get; init; }
+
+
+    /// <summary>
+    /// The logger to use
+    /// </summary>
+    private ILogger Logging { get; init; }
+
+    #endregion
+
+    #region Constructor
 
     /// <summary>
     /// Default constructor
     /// </summary>
     /// <param name="config">The configuration settings</param>
-    public ConfigHelper(IConfiguration config)
+    public ConfigHelper(IConfiguration config, ILogger logging)
     {
-        Configuration = config;        
+        Configuration = config;
+        Logging = logging;
     }
+
+    #endregion
+
+    #region Public methods
+
+    /// <summary>
+    /// Get the full path to the google bucket from configuration
+    /// </summary>
+    /// <returns>The full path to the google bucket</returns>
+    public string? GetGoogleBucketPath()
+    {
+        return GetStringFromConfig("GoogleBucketPath");
+    }
+
+    /// <summary>
+    /// Get the full path for where to store the command line output of files 
+    /// located in the google bucket
+    /// </summary>
+    /// <returns>The full path</returns>
+    public string? GetFilesInBucketPath()
+    {
+        string? fileName = GetStringFromConfig("FilesInBucketFileName");
+        if (fileName is null)
+        {
+            return null;
+        }
+
+        string appName = AppDomain.CurrentDomain.FriendlyName;
+        string partialDirPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        return Path.Combine(partialDirPath, appName, fileName);
+    }
+
+    #endregion
+
+    #region Private methods
+
+    /// <summary>
+    /// Gets a string value from the configuration
+    /// </summary>
+    /// <param name="configKey">The config key</param>
+    /// <returns>A string of the value or null if not found</returns>
+    private string? GetStringFromConfig(string configKey)
+    {
+        string? val = Configuration.GetValue<string>(configKey);
+        if (val is null)
+        {
+            Logging.LogWarning($"The key \"{configKey})\" does not exist in the configuration");
+        }
+        return val;
+    }
+
+    #endregion
 }

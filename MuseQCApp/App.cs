@@ -78,6 +78,11 @@ public class App
     /// </summary>
     public void Run()
     {
+        string appName = AppDomain.CurrentDomain.FriendlyName;
+        Logging.LogInformation($"{appName} started running");
+        List<string> pathsOnBucket = Bucket.GetFilePaths();
+
+        Logging.LogInformation($"{appName} done running");
     }
 
     #endregion
