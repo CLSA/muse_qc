@@ -6,6 +6,8 @@ using MuseQCApp.FileLogger;
 using MuseQCApp.Helpers;
 using MuseQCApp.Interfaces;
 using MuseQCApp.Modules;
+using MuseQCDBAccess.Data;
+using MuseQCDBAccess.DbAccess;
 
 namespace MuseQCApp;
 
@@ -31,6 +33,10 @@ public class DependencyInjectionBuilder
                 .AddSingleton<IMuseQualityRunner, MuseQualityRunner>()
                 .AddSingleton<IQualityReport, QualityReport>()
                 .AddSingleton<ICleanUp, CleanUp>()
+                .AddSingleton<IDataAccess, MySqlDataAccess>()
+                .AddSingleton<CollectionData>()
+                .AddSingleton<ParticipantData>()
+                .AddSingleton<ConfigValsData>()
                 .AddLogging(options => {
                     string documentsDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                     string appName = AppDomain.CurrentDomain.FriendlyName;

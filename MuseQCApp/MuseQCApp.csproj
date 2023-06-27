@@ -13,6 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MuseQCDBAccess\MuseQCDBAccess.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="appsettings.production.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
