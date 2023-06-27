@@ -146,3 +146,74 @@ VALUES (cid, Dur, Ch1, Ch2, Ch3, Ch4, Ch12, Ch13, Ch43, Ch42,
 END$$
 
 DELIMITER ;
+
+-- ------------------------------------------
+-- procedure insert_lastDateTimeDownloaded
+-- ------------------------------------------
+USE `museqc`;
+DROP procedure IF EXISTS `insert_lastDateTimeDownloaded`;
+
+DELIMITER $$
+USE `museqc`$$
+CREATE PROCEDURE `insert_lastDateTimeDownloaded` (IN LastDateTimeDownloaded DATETIME)
+BEGIN
+INSERT INTO museqc.configvals (lastDateTimeDownloaded) VALUES (LastDateTimeDownloaded);
+END$$
+
+DELIMITER ;
+
+-- ------------------------------------------
+-- procedure lastDateTimeDownloaded_exists
+-- ------------------------------------------
+USE `museqc`;
+DROP procedure IF EXISTS `lastDateTimeDownloaded_exists`;
+
+DELIMITER $$
+USE `museqc`$$
+CREATE PROCEDURE `lastDateTimeDownloaded_exists` ()
+BEGIN
+DECLARE cid INT unsigned;
+SET cid = (SELECT MIN(id) FROM configvals);
+SELECT EXISTS(SELECT * FROM museqc.configvals WHERE id = cid);
+END$$
+
+DELIMITER ;
+
+-- ------------------------------------------
+-- procedure update_lastDateTimeDownloaded
+-- ------------------------------------------
+USE `museqc`;
+DROP procedure IF EXISTS `update_lastDateTimeDownloaded`;
+
+DELIMITER $$
+USE `museqc`$$
+CREATE PROCEDURE `update_lastDateTimeDownloaded` (IN LastDateTimeDownloaded DATETIME)
+BEGIN
+DECLARE cid INT unsigned;
+SET cid = (SELECT MIN(id) FROM configvals);
+UPDATE museqc.configvals
+SET lastDateTimeDownloaded = LastDateTimeDownloaded
+WHERE id = cid;
+END$$
+
+DELIMITER ;
+
+-- ------------------------------------------
+-- procedure get_lastDateTimeDownloaded
+-- ------------------------------------------
+USE `museqc`;
+DROP procedure IF EXISTS `get_lastDateTimeDownloaded`;
+
+DELIMITER $$
+USE `museqc`$$
+CREATE PROCEDURE `get_lastDateTimeDownloaded` ()
+BEGIN
+DECLARE cid INT unsigned;
+SET cid = (SELECT MIN(id) FROM configvals);
+SELECT lastDateTimeDownloaded
+FROM museqc.configvals
+WHERE id = cid;
+
+END$$
+
+DELIMITER ;
