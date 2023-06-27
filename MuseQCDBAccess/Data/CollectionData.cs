@@ -15,11 +15,11 @@ public class CollectionData
     //       in the database, the spelling/casing of the parameters must
     //       match in c# and in the stored procedure
 
-    public Task<IEnumerable<QCStatsModel>> GetStats() =>
-        _db.LoadData<QCStatsModel, dynamic>("insert_collectionBasicInfo", new { });
-
-    public Task<IEnumerable<bool>> CoolectionExists(string WID, DateTime StartDateTime, string PodID) =>
+    public Task<IEnumerable<bool>> CollectionExists(string WID, DateTime StartDateTime, string PodID) =>
         _db.LoadData<bool, dynamic>("collectionBasicInfo_exists", new { WID, StartDateTime, PodID });
+
+    public Task<IEnumerable<bool>> JpgExists(string WID, DateTime StartDateTime, string PodID) =>
+        _db.LoadData<bool, dynamic>("jpg_exists", new { WID, StartDateTime, PodID });
 
     public Task InsertBasicInfo(string WID, DateTime StartDateTime, float TimezoneOffset, string PodID, DateTime UploadDate) =>
         _db.SaveData<dynamic>("insert_collectionBasicInfo", new { WID, StartDateTime, TimezoneOffset, PodID, UploadDate });

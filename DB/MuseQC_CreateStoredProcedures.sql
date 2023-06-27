@@ -114,6 +114,25 @@ END$$
 DELIMITER ;
 
 -- ------------------------------------------
+-- procedure jpg_exists
+-- ------------------------------------------
+USE `museqc`;
+DROP procedure IF EXISTS `jpg_exists`;
+
+DELIMITER $$
+USE `museqc`$$
+CREATE PROCEDURE `jpg_exists` (IN WID CHAR(10), IN StartDateTime DATETIME, IN PodID CHAR(14))
+BEGIN
+SELECT EXISTS(
+	SELECT *
+	FROM museqc.collection 
+	WHERE westonID = WID AND startDate = StartDateTime AND podID = PodID AND jpgPath != NULL
+);
+END$$
+
+DELIMITER ;
+
+-- ------------------------------------------
 -- procedure insert_qualityOutputs
 -- ------------------------------------------
 USE `museqc`;
