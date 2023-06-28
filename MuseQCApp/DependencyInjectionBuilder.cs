@@ -34,9 +34,7 @@ public class DependencyInjectionBuilder
                 .AddSingleton<IQualityReport, QualityReport>()
                 .AddSingleton<ICleanUp, CleanUp>()
                 .AddSingleton<IDataAccess, MySqlDataAccess>()
-                .AddSingleton<CollectionData>()
-                .AddSingleton<ParticipantData>()
-                .AddSingleton<ConfigValsData>()
+                .AddSingleton<MysqlDBData>()
                 .AddLogging(options => {
                     string documentsDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                     string appName = AppDomain.CurrentDomain.FriendlyName;
