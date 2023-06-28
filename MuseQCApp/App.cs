@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MuseQCApp.Helpers;
 using MuseQCApp.Interfaces;
+using MuseQCApp.Models;
 
 namespace MuseQCApp;
 
@@ -43,7 +44,6 @@ public class App
     /// </summary>
     private ICleanUp Clean { get; init; }
 
-
     #endregion
 
     #region Constructor
@@ -58,7 +58,8 @@ public class App
     /// <param name="qualityRunner">A module for running the muse quality checks</param>
     /// <param name="qualityReport">A module for creating muse quality reports</param>
     /// <param name="clean">A module for cleaning up the unnecessary files in the file system</param>
-    public App(ConfigHelper configHelper, ILogger logging, IGoogleBucket bucket, IFileLocations filePaths, IMuseQualityRunner qualityRunner, IQualityReport qualityReport, ICleanUp clean)
+    public App(ConfigHelper configHelper, ILogger logging, IGoogleBucket bucket, IFileLocations filePaths,
+        IMuseQualityRunner qualityRunner, IQualityReport qualityReport, ICleanUp clean)
     {
         ConfigHelper = configHelper;
         Logging = logging;
@@ -81,8 +82,8 @@ public class App
         string appName = AppDomain.CurrentDomain.FriendlyName;
         Logging.LogInformation($"{appName} started running");
 
-        //List<string> pathsOnBucket = Bucket.GetFilePaths();
-        //Bucket.DownloadFiles(new List<string>());
+        List<GBDownloadInfoModel> pathsOnBucket = Bucket.GetFilePaths();
+        Bucket.DownloadFiles(pathsOnBucket);
 
         Logging.LogInformation($"{appName} done running");
     }

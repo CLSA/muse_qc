@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MuseQCApp.Helpers;
 using MuseQCApp.Interfaces;
+using MuseQCApp.Models;
 using System.Diagnostics;
 
 namespace MuseQCApp.Modules;
@@ -44,18 +45,20 @@ public class GoogleBucket : IGoogleBucket
 
     #region Implemented interface methods
 
-    public bool DownloadFiles(List<string> filePaths)
+    public bool DownloadFiles(List<GBDownloadInfoModel> filesToDownload)
     {
         // Get the edf storage folder path
         string? edfStorageFolder = ConfigHelper.GetEdfStorageFolderPath();
         if(edfStorageFolder is null)
         {
+            Logging.LogWarning("Null google edf storage path returned from config");
             return false;
         }
 
         // ensure the edf storage folder is created
         if(Directory.Exists(edfStorageFolder) == false)
         {
+            Logging.LogWarning($"Creating edf storage directory at {edfStorageFolder}");
             Directory.CreateDirectory(edfStorageFolder);
         }
 
@@ -64,11 +67,21 @@ public class GoogleBucket : IGoogleBucket
         cmd.Start();
 
         // Download files
-        foreach(var filePath in filePaths)
+        bool allFilesDownloaded = true;
+        foreach(var gbInfo in filesToDownload)
         {
-            string fileName = Path.GetFileName(filePath).Replace(":", "");
-            string path = Path.Combine(edfStorageFolder, fileName);
-            cmd.StandardInput.WriteLine($"gsutil cp \"{filePath}\" \"{path}\"");
+            string fileName = Path.GetFileName(gbInfo.FullFilePath).Replace(":", "");
+            string fullFilepath = Path.Combine(edfStorageFolder, fileName);
+            cmd.StandardInput.WriteLine($"gsutil cp \"{gbInfo.FullFilePath}\" \"{fullFilepath}\"");
+            if (File.Exists(fullFilepath))
+            {
+                Logging.LogInformation($"Downloaded: {fullFilepath}");
+            }
+            else
+            {
+                allFilesDownloaded = false;
+                Logging.LogError($"Failed to download: {gbInfo.FullFilePath}");
+            }
         }
         
         // Close connection with command line
@@ -76,11 +89,10 @@ public class GoogleBucket : IGoogleBucket
         cmd.StandardInput.Close();
         cmd.WaitForExit();
 
-        // TODO: check that files are actually downloaded
-        return true;
+        return allFilesDownloaded;
     }
 
-    public List<string> GetFilePaths()
+    public List<GBDownloadInfoModel> GetFilePaths()
     {
         // Get paths
         string? bucketPath = ConfigHelper.GetGoogleBucketPath();
@@ -89,7 +101,8 @@ public class GoogleBucket : IGoogleBucket
         // Return empty list if config returns a null path
         if(bucketPath == null || outputTxtPath == null)
         {
-            return new List<string>();
+            Logging.LogWarning("Null google bucket path returned from config");
+            return new List<GBDownloadInfoModel>();
         }
 
         // Remove the previous output file if there is one
@@ -100,9 +113,9 @@ public class GoogleBucket : IGoogleBucket
         }
 
         // Run commandline command to get files on google bucket and store 
-        // filepaths in a txt file
+        // file paths in a txt file
         Process cmd = CreateGetFilePathsProcess(bucketPath, outputTxtPath);
-        Logging.LogInformation($"Querying google bucket for filepaths. Files will be stored in {outputTxtPath}");
+        Logging.LogInformation($"Querying google bucket for file paths. Files will be stored in {outputTxtPath}");
         cmd.Start();
         cmd.WaitForExit();
 
@@ -142,33 +155,89 @@ public class GoogleBucket : IGoogleBucket
     /// Reads the files paths stored in the output txt
     /// </summary>
     /// <param name="outputTxtPath">The path to read from</param>
-    /// <returns>A list of the eeg filepaths</returns>
-    private List<string> ReadEEGFilesFromOutputTxt(string outputTxtPath)
+    /// <returns>A list of the eeg file paths</returns>
+    private List<GBDownloadInfoModel> ReadEEGFilesFromOutputTxt(string outputTxtPath)
     {
-
         // log error if the output txt cannot be found
         if (File.Exists(outputTxtPath) == false)
         {
             Logging.LogError($"No file found with path {outputTxtPath}");
-            return new List<string>();
+            return new List<GBDownloadInfoModel>();
         }
 
         // Read eeg file paths from output txt
-        List<string> eegFiles = new();
+        List<GBDownloadInfoModel> eegFiles = new();
         using (StreamReader sr = new(outputTxtPath))
         {
+            if(sr.EndOfStream == true)
+            {
+                Logging.LogError("Output txt empty. Google bucket query was unsuccessful.");
+                return eegFiles;
+            }
+
             while (sr.EndOfStream == false)
             {
                 string? line = sr.ReadLine();
                 if (line != null && line.Trim().EndsWith("eeg.edf"))
                 {
-                    eegFiles.Add(line.Split().Last());
+                    GBDownloadInfoModel? gbInfo = GetGbInfoFromLine(line);
+                    if(gbInfo != null)
+                    {
+                        Logging.LogInformation($"Added file to list of eeg files that exist in google bucket:\n\t{gbInfo.FileNameWithExtension}");
+                        eegFiles.Add(gbInfo);
+                    }
                 }
             }
         }
 
         Logging.LogInformation($"Read in all eeg files from {outputTxtPath}");
         return eegFiles;
+    }
+
+    /// <summary>
+    /// Gets google bucket info from a line of text stored when querying the google bucket
+    /// </summary>
+    /// <param name="line">A line of text output from querying the google bucket</param>
+    /// <returns>The google bucket info for that line if it can be interpreted, otherwise null</returns>
+    private GBDownloadInfoModel? GetGbInfoFromLine(string line)
+    {
+        if (line.ToLower().StartsWith("total"))
+        {
+            Logging.LogInformation("Read in final line from available files on google bucket");
+            return null;
+        }
+
+        string fullPath = line.Trim().Split().Last();
+        DateTime uploadDateTime = DateTime.Now;
+        try
+        {
+            string[] lineSplit = line.Trim().Split()
+                .Select(p => p.Trim())
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .ToArray();
+            string uploadDateStr = lineSplit[2];
+            uploadDateTime = DateTime.Parse(uploadDateStr);
+        }
+        catch
+        {
+            Logging.LogError($"Date could not be identified in the following line:\n\t{line.Trim()}");
+            return null;
+        }
+
+        GBDownloadInfoModel gbInfo = new(fullPath, uploadDateTime);
+        if (gbInfo.NoNullValues)
+        {
+            if (gbInfo.DataType.ToLower().Equals("eeg"))
+            {
+                return gbInfo;
+            }
+        }
+        else
+        {
+            Logging.LogError($"File name not in the expected format:\n\t{line.Trim()}");
+        }
+
+        return null;
     }
 
     /// <summary>
