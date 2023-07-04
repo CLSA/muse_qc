@@ -15,24 +15,24 @@ public class CollectionData
     //       in the database, the spelling/casing of the parameters must
     //       match in c# and in the stored procedure
 
-    public Task<IEnumerable<bool>> CollectionExists(string WID, DateTime StartDateTime, string PodID) =>
-        _db.LoadData<bool, dynamic>("collectionBasicInfo_exists", new { WID, StartDateTime, PodID });
+    public Task<IEnumerable<bool>> CollectionExists(string WID, DateTime StartDT, string PodSerial) =>
+        _db.LoadData<bool, dynamic>("collectionBasicInfo_exists", new { WID, StartDT, PodSerial });
 
-    public Task<IEnumerable<bool>> JpgExists(string WID, DateTime StartDateTime, string PodID) =>
-        _db.LoadData<bool, dynamic>("jpg_exists", new { WID, StartDateTime, PodID });
+    public Task<IEnumerable<bool>> JpgExists(string WID, DateTime StartDT, string PodSerial) =>
+        _db.LoadData<bool, dynamic>("jpg_exists", new { WID, StartDT, PodSerial });
 
-    public Task InsertBasicInfo(string WID, DateTime StartDateTime, float TimezoneOffset, string PodID, DateTime UploadDate) =>
-        _db.SaveData<dynamic>("insert_collectionBasicInfo", new { WID, StartDateTime, TimezoneOffset, PodID, UploadDate });
+    public Task InsertBasicInfo(string WID, DateTime StartDT, float TimeOffset, string PodSerial, DateTime UploadDT, DateTime BasicInfoAddedDT) =>
+        _db.SaveData<dynamic>("insert_collectionBasicInfo", new { WID, StartDT, TimeOffset, PodSerial, UploadDT, BasicInfoAddedDT });
 
-    public Task InsertQualityOutputs(string WID, DateTime StartDateTime, string PodID,
-        QCStatsModel qc, string JpgPath, bool IsRealData, bool HasProblem
+    public Task InsertQualityOutputs(string WID, DateTime StartDT, string PodSerial,
+        QCStatsModel qc, string JpgPath, bool RealData, bool Problem, DateTime OutputsAddedDT
         ) =>
         _db.SaveData<dynamic>("insert_qualityOutputs", new { 
-            WID, StartDateTime, PodID,
+            WID, StartDT, OutputsAddedDT, PodSerial,
             qc.Dur, qc.Ch1, qc.Ch2, qc.Ch3, qc.Ch4,
             qc.Ch12, qc.Ch13, qc.Ch43, qc.Ch42,
             qc.FAny, qc.FBoth, qc.TAny, qc.TBoth,
             qc.FtAny, qc.EegAny, qc.EegAll,
-            JpgPath, IsRealData, HasProblem
+            JpgPath, RealData, Problem
         });
 }
