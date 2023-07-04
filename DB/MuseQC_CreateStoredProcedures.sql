@@ -85,11 +85,11 @@ DROP procedure IF EXISTS `insert_collectionBasicInfo`;
 
 DELIMITER $$
 USE `museqc`$$
-CREATE PROCEDURE `insert_collectionBasicInfo` (IN WID CHAR(10), IN StartDateTime DATETIME,
-	IN TimezoneOffset float, IN PodID CHAR(14), IN UploadDate DATE)
+CREATE PROCEDURE `insert_collectionBasicInfo` (IN WID CHAR(10), IN StartDT DATETIME,
+	IN TimezoneOffset float, IN PodSerial CHAR(14), IN UploadDT DATETIME, IN BasicInfoAddedDateTime DATETIME)
 BEGIN
-INSERT INTO museqc.collection (westonID, startDate, timeZoneOffset, podID, uploadDate) 
-VALUES (WID, StartDateTime, TimezoneOffset, PodID, UploadDate);
+INSERT INTO museqc.collection (westonID, startDateTime, timeZoneOffset, podID, uploadDateTime, basicInfoAddedDateTime) 
+VALUES (WID, StartDT, TimezoneOffset, PodSerial, UploadDT, BasicInfoAddedDateTime);
 END$$
 
 DELIMITER ;
@@ -102,12 +102,12 @@ DROP procedure IF EXISTS `collectionBasicInfo_exists`;
 
 DELIMITER $$
 USE `museqc`$$
-CREATE PROCEDURE `collectionBasicInfo_exists` (IN WID CHAR(10), IN StartDateTime DATETIME, IN PodID CHAR(14))
+CREATE PROCEDURE `collectionBasicInfo_exists` (IN WID CHAR(10), IN StartDT DATETIME, IN PodSerial CHAR(14))
 BEGIN
 SELECT EXISTS(
 	SELECT *
 	FROM museqc.collection 
-	WHERE westonID = WID AND startDate = StartDateTime AND podID = PodID
+	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial
 );
 END$$
 
@@ -121,12 +121,12 @@ DROP procedure IF EXISTS `jpg_exists`;
 
 DELIMITER $$
 USE `museqc`$$
-CREATE PROCEDURE `jpg_exists` (IN WID CHAR(10), IN StartDateTime DATETIME, IN PodID CHAR(14))
+CREATE PROCEDURE `jpg_exists` (IN WID CHAR(10), IN StartDT DATETIME, IN PodSerial CHAR(14))
 BEGIN
 SELECT EXISTS(
 	SELECT *
 	FROM museqc.collection 
-	WHERE westonID = WID AND startDate = StartDateTime AND podID = PodID AND jpgPath != NULL
+	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial AND jpgPath != NULL
 );
 END$$
 
@@ -141,19 +141,19 @@ DROP procedure IF EXISTS `insert_qualityOutputs`;
 DELIMITER $$
 USE `museqc`$$
 CREATE PROCEDURE `insert_qualityOutputs` (
-	IN WID CHAR(10), IN StartDateTime DATETIME, IN PodID CHAR(14), 
+	IN WID CHAR(10), IN StartDT DATETIME, IN OutputsAddedDT DATETIME, IN PodSerial CHAR(14), 
 	IN Dur DOUBLE, IN Ch1 DOUBLE, IN Ch2 DOUBLE, IN Ch3 DOUBLE, IN Ch4 DOUBLE,
     IN Ch12 DOUBLE, IN Ch13 DOUBLE, IN Ch43 DOUBLE, IN Ch42 DOUBLE,
     IN FAny DOUBLE, IN FBoth DOUBLE, IN TAny DOUBLE, IN TBoth DOUBLE,
     IN FtAny DOUBLE, IN EegAny DOUBLE, IN EegAll DOUBLE,
-	IN JpgPath VARCHAR(256), IN IsRealData BOOLEAN, IN HasProblem BOOLEAN
+	IN JpgPath VARCHAR(256), IN RealData BOOLEAN, IN Problem BOOLEAN
 )
 BEGIN
 DECLARE cid INT unsigned;  
-SET cid = (SELECT collectionID FROM collection WHERE westonID = WID AND startDate = StartDateTime AND podID = PodID);
+SET cid = (SELECT collectionID FROM collection WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial);
 
 UPDATE collection
-SET jpgPath = JpgPath, isRealDay = IsRealData, hasProblem = HasProblem
+SET jpgPath = JpgPath, isRealDay = RealData, hasProblem = Problem, outputsAddedDateTime = OutputsAddedDT
 WHERE collectionID = cid; 
 
 INSERT INTO museqc.qcstats (collectionID, duration, eegch1, eegch2, eegch3, eegch4, 

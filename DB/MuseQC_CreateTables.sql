@@ -9,15 +9,17 @@ CREATE TABLE IF NOT EXISTS museqc.`participants` (
 CREATE TABLE IF NOT EXISTS  museqc.`collection` (
   `collectionID` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `westonID` char(10) NOT NULL,
-  `startDate` datetime NOT NULL,
+  `startDateTime` datetime NOT NULL,
   `timeZoneOffset` float NOT NULL,
   `podID` char(14) NOT NULL,
-  `uploadDate` date NOT NULL,
+  `uploadDateTime` datetime NOT NULL,
+  `basicInfoAddedDateTime` datetime DEFAULT NULL,
+  `outputsAddedDateTime` datetime DEFAULT NULL,
   `jpgPath` varchar(256) DEFAULT NULL,
   `isRealDay` tinyint DEFAULT NULL,
   `hasProblem` tinyint DEFAULT NULL,
   PRIMARY KEY (`collectionID`),
-  UNIQUE (`westonID`, `startDate`, `podID`),
+  UNIQUE (`westonID`, `startDateTime`, `podID`),
   KEY `WestonID_FK_idx` (`westonID`),
   CONSTRAINT `WestonID_FK` FOREIGN KEY (`westonID`) REFERENCES `participants` (`westonID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
