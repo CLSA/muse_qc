@@ -3,17 +3,19 @@
 namespace MuseQCApp.Interfaces;
 
 /// <summary>
-/// An interface for making descions that require knowledge of file locations
+/// An interface for making decisions that require knowledge of file locations
 /// </summary>
 public interface IFileLocations
 {
     /// <summary>
-    /// Decides and keeps entries in the dict which need edf files to be downloaded. Removes any 
-    /// entries where there is already either edf files or if their is a complete set of 
-    /// output files (.jpg and .csv)
+    /// Decides and which edf files to be downloaded. Selects all files as long as they do 
+    /// not meet either of the following 2 criteria 
+    /// 1. The edf file currently exists in the file system
+    /// 2. There is already a complete set of output data for the edf file (ie. quality script has been run)
     /// </summary>
-    /// <param name="possibleFilesDict">The possible files that can be selected for download</param>
-    public void DecideFilesToDownload(Dictionary<string, object> possibleFilesDict);
+    /// <param name="downloadableFiles">The files that can be selected for download</param>
+    /// <returns>The <see cref="GBDownloadInfoModel"/> of files that should be downloaded</returns>
+    public List<GBDownloadInfoModel> DecideFilesToDownload(List<GBDownloadInfoModel> downloadableFiles);
 
     /// <summary>
     /// Gets the full file paths for each edf file that needs a quality check run
