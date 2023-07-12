@@ -47,9 +47,3 @@ CREATE TABLE IF NOT EXISTS  museqc.`qcstats` (
   KEY `collectionID_FK_idx` (`collectionID`),
   CONSTRAINT `collectionID_FK` FOREIGN KEY (`collectionID`) REFERENCES `collection` (`collectionID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS `museqc`.`configvals` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `lastDateTimeDownloaded` DATETIME NULL,
-  UNIQUE INDEX `lastDateTimeDownloaded_UNIQUE` (`lastDateTimeDownloaded` ASC) VISIBLE,
-  PRIMARY KEY (`id`));

@@ -86,10 +86,10 @@ DROP procedure IF EXISTS `insert_collectionBasicInfo`;
 DELIMITER $$
 USE `museqc`$$
 CREATE PROCEDURE `insert_collectionBasicInfo` (IN WID CHAR(10), IN StartDT DATETIME,
-	IN TimezoneOffset float, IN PodSerial CHAR(14), IN UploadDT DATETIME, IN BasicInfoAddedDateTime DATETIME)
+	IN TimeOffset float, IN PodSerial CHAR(14), IN UploadDT DATETIME, IN BasicInfoAddedDT DATETIME)
 BEGIN
 INSERT INTO museqc.collection (westonID, startDateTime, timeZoneOffset, podID, uploadDateTime, basicInfoAddedDateTime) 
-VALUES (WID, StartDT, TimezoneOffset, PodSerial, UploadDT, BasicInfoAddedDateTime);
+VALUES (WID, StartDT, TimeOffset, PodSerial, UploadDT, BasicInfoAddedDT);
 END$$
 
 DELIMITER ;
@@ -167,57 +167,6 @@ END$$
 DELIMITER ;
 
 -- ------------------------------------------
--- procedure insert_lastDateTimeDownloaded
--- ------------------------------------------
-USE `museqc`;
-DROP procedure IF EXISTS `insert_lastDateTimeDownloaded`;
-
-DELIMITER $$
-USE `museqc`$$
-CREATE PROCEDURE `insert_lastDateTimeDownloaded` (IN LastDateTimeDownloaded DATETIME)
-BEGIN
-INSERT INTO museqc.configvals (lastDateTimeDownloaded) VALUES (LastDateTimeDownloaded);
-END$$
-
-DELIMITER ;
-
--- ------------------------------------------
--- procedure lastDateTimeDownloaded_exists
--- ------------------------------------------
-USE `museqc`;
-DROP procedure IF EXISTS `lastDateTimeDownloaded_exists`;
-
-DELIMITER $$
-USE `museqc`$$
-CREATE PROCEDURE `lastDateTimeDownloaded_exists` ()
-BEGIN
-DECLARE cid INT unsigned;
-SET cid = (SELECT MIN(id) FROM configvals);
-SELECT EXISTS(SELECT * FROM museqc.configvals WHERE id = cid);
-END$$
-
-DELIMITER ;
-
--- ------------------------------------------
--- procedure update_lastDateTimeDownloaded
--- ------------------------------------------
-USE `museqc`;
-DROP procedure IF EXISTS `update_lastDateTimeDownloaded`;
-
-DELIMITER $$
-USE `museqc`$$
-CREATE PROCEDURE `update_lastDateTimeDownloaded` (IN LastDateTimeDownloaded DATETIME)
-BEGIN
-DECLARE cid INT unsigned;
-SET cid = (SELECT MIN(id) FROM configvals);
-UPDATE museqc.configvals
-SET lastDateTimeDownloaded = LastDateTimeDownloaded
-WHERE id = cid;
-END$$
-
-DELIMITER ;
-
--- ------------------------------------------
 -- procedure get_lastDateTimeDownloaded
 -- ------------------------------------------
 USE `museqc`;
@@ -227,11 +176,10 @@ DELIMITER $$
 USE `museqc`$$
 CREATE PROCEDURE `get_lastDateTimeDownloaded` ()
 BEGIN
-DECLARE cid INT unsigned;
-SET cid = (SELECT MIN(id) FROM configvals);
-SELECT lastDateTimeDownloaded
-FROM museqc.configvals
-WHERE id = cid;
+
+SELECT MAX(uploadDateTime)
+FROM museqc.collection
+WHERE jpgPath != null;
 
 END$$
 
