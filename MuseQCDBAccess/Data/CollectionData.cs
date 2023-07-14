@@ -21,6 +21,12 @@ public class CollectionData
     public Task<IEnumerable<bool>> JpgExists(string WID, DateTime StartDT, string PodSerial) =>
         _db.LoadData<bool, dynamic>("jpg_exists", new { WID, StartDT, PodSerial });
 
+    public Task<IEnumerable<bool>> EdfExists(string WID, DateTime StartDT, string PodSerial) =>
+        _db.LoadData<bool, dynamic>("edf_exists", new { WID, StartDT, PodSerial });
+
+    public Task UpdateEdfPath(string WID, DateTime StartDT, string PodSerial, string edfFullPath) =>
+        _db.SaveData<dynamic>("update_edfPath", new { WID, StartDT, PodSerial, edfFullPath});
+
     public Task InsertBasicInfo(string WID, DateTime StartDT, float TimeOffset, string PodSerial, DateTime UploadDT, DateTime BasicInfoAddedDT) =>
         _db.SaveData<dynamic>("insert_collectionBasicInfo", new { WID, StartDT, TimeOffset, PodSerial, UploadDT, BasicInfoAddedDT });
 

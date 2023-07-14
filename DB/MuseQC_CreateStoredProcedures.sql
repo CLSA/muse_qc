@@ -114,6 +114,42 @@ END$$
 DELIMITER ;
 
 -- ------------------------------------------
+-- procedure update_edfPath
+-- ------------------------------------------
+USE `museqc`;
+DROP procedure IF EXISTS `update_edfPath`;
+
+DELIMITER $$
+USE `museqc`$$
+CREATE PROCEDURE `update_edfPath` (IN WID CHAR(10), IN StartDT DATETIME, IN PodSerial CHAR(14), IN edfFullPath VARCHAR(256))
+BEGIN
+UPDATE museqc.collection
+SET edfPath = edfFullPath
+WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial;
+END$$
+
+DELIMITER ;
+
+-- ------------------------------------------
+-- procedure edf_exists
+-- ------------------------------------------
+USE `museqc`;
+DROP procedure IF EXISTS `edf_exists`;
+
+DELIMITER $$
+USE `museqc`$$
+CREATE PROCEDURE `edf_exists` (IN WID CHAR(10), IN StartDT DATETIME, IN PodSerial CHAR(14))
+BEGIN
+SELECT EXISTS(
+	SELECT *
+	FROM museqc.collection 
+	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial AND edfPath != NULL
+);
+END$$
+
+DELIMITER ;
+
+-- ------------------------------------------
 -- procedure jpg_exists
 -- ------------------------------------------
 USE `museqc`;
@@ -177,9 +213,11 @@ USE `museqc`$$
 CREATE PROCEDURE `get_lastDateTimeDownloaded` ()
 BEGIN
 
-SELECT MAX(uploadDateTime)
-FROM museqc.collection
-WHERE jpgPath != null;
+SELECT IF(
+	(SELECT count(collectionID) FROM museqc.collection WHERE outputsAddedDateTime IS NULL AND edfPath IS NULL) > 0,
+	(SELECT MIN(uploadDateTime) FROM museqc.collection WHERE outputsAddedDateTime IS NULL AND edfPath IS NULL),
+	(SELECT MAX(uploadDateTime) FROM museqc.collection)
+);
 
 END$$
 

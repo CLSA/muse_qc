@@ -49,13 +49,13 @@ public class FileLocations : IFileLocations
 
         // Check each file that can be downloaded and select those that need to be downloaded
         List<GBDownloadInfoModel> filesToDownload = new();
-        foreach(GBDownloadInfoModel gbInfo in downloadableFiles)
+        foreach (GBDownloadInfoModel gbInfo in downloadableFiles)
         {
             try
             {
-                // Ignore if missing information or if the upload date if earlier then the last file downloaded
+                // Ignore if missing information or if the upload date is earlier then the last file downloaded
                 if (gbInfo.NoNullValues == false
-                    && lastTimeDownloaded != null && gbInfo.UploadDateTime.CompareTo(lastTimeDownloaded) < 0)
+                    || (lastTimeDownloaded != null && gbInfo.UploadDateTime.CompareTo(lastTimeDownloaded) < 0))
                 {
                     continue;
                 }
@@ -92,7 +92,7 @@ public class FileLocations : IFileLocations
     /// Get the upload date time of the last file downloaded
     /// </summary>
     /// <returns>The upload date time of the last file downloaded, or Null if there has no been any files downloaded</returns>
-    private DateTime? GetUploadDTLastFileDownloaded()
+    public DateTime? GetUploadDTLastFileDownloaded()
     {
         DateTime? lastTimeDownloaded = Db.ConfigVals.GetLastDateDownloaded().Result.First();
         return lastTimeDownloaded;

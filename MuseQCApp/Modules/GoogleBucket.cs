@@ -2,6 +2,7 @@
 using MuseQCApp.Helpers;
 using MuseQCApp.Interfaces;
 using MuseQCApp.Models;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace MuseQCApp.Modules;
@@ -45,43 +46,17 @@ public class GoogleBucket : IGoogleBucket
 
     #region Implemented interface methods
 
-    public bool DownloadFiles(List<GBDownloadInfoModel> filesToDownload)
+    public List<GBDownloadInfoModel> DownloadFiles(List<GBDownloadInfoModel> filesToDownload, string edfStorageFolder)
     {
-        // Get the edf storage folder path
-        string? edfStorageFolder = ConfigHelper.GetEdfStorageFolderPath();
-        if(edfStorageFolder is null)
-        {
-            Logging.LogWarning("Null google edf storage path returned from config");
-            return false;
-        }
-
-        // ensure the edf storage folder is created
-        if(Directory.Exists(edfStorageFolder) == false)
-        {
-            Logging.LogWarning($"Creating edf storage directory at {edfStorageFolder}");
-            Directory.CreateDirectory(edfStorageFolder);
-        }
-
         // Get process ready
         Process cmd = CreateDownloadFilesProcess();
         cmd.Start();
 
         // Download files
-        bool allFilesDownloaded = true;
         foreach(var gbInfo in filesToDownload)
         {
-            string fileName = Path.GetFileName(gbInfo.FullFilePath).Replace(":", "");
-            string fullFilepath = Path.Combine(edfStorageFolder, fileName);
-            cmd.StandardInput.WriteLine($"gsutil cp \"{gbInfo.FullFilePath}\" \"{fullFilepath}\"");
-            if (File.Exists(fullFilepath))
-            {
-                Logging.LogInformation($"Downloaded: {fullFilepath}");
-            }
-            else
-            {
-                allFilesDownloaded = false;
-                Logging.LogError($"Failed to download: {gbInfo.FullFilePath}");
-            }
+            string fullFilePath = gbInfo.GetDownloadFilePath(edfStorageFolder);
+            cmd.StandardInput.WriteLine($"gsutil cp \"{gbInfo.FullFilePath}\" \"{fullFilePath}\"");
         }
         
         // Close connection with command line
@@ -89,7 +64,23 @@ public class GoogleBucket : IGoogleBucket
         cmd.StandardInput.Close();
         cmd.WaitForExit();
 
-        return allFilesDownloaded;
+        // Download files
+        List<GBDownloadInfoModel> filesDownloadedSuccessfully = new();
+        foreach (var gbInfo in filesToDownload)
+        {
+            string fullFilePath = gbInfo.GetDownloadFilePath(edfStorageFolder);
+            if (File.Exists(fullFilePath))
+            {
+                Logging.LogInformation($"Downloaded: {fullFilePath}");
+                filesDownloadedSuccessfully.Add(gbInfo);
+            }
+            else
+            {
+                Logging.LogError($"Failed to download: {gbInfo.FullFilePath}");
+            }
+        }
+
+        return filesDownloadedSuccessfully;
     }
 
     public List<GBDownloadInfoModel> GetFilePaths()
@@ -112,7 +103,7 @@ public class GoogleBucket : IGoogleBucket
             File.Delete(outputTxtPath);
         }
 
-        // Run commandline command to get files on google bucket and store 
+        // Run command line command to get files on google bucket and store 
         // file paths in a txt file
         Process cmd = CreateGetFilePathsProcess(bucketPath, outputTxtPath);
         Logging.LogInformation($"Querying google bucket for file paths. Files will be stored in {outputTxtPath}");

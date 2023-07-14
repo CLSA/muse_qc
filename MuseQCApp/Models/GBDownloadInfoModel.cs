@@ -15,6 +15,8 @@ public class GBDownloadInfoModel
     /// </summary>
     public string FileNameWithExtension => Path.GetFileName(FullFilePath);
 
+    public string DownloadFileNameWithExtension => FileNameWithExtension.Replace(":", "");
+
     /// <summary>
     /// The file name without extension
     /// </summary>
@@ -72,6 +74,11 @@ public class GBDownloadInfoModel
         PodID = GetPodIDFromFileName(FileNameWithoutExtension);
         WestonID = GetWestonIDFromFileName(FileNameWithoutExtension);
         DataType = GetDataTypeFromFileName(FileNameWithoutExtension);
+    }
+
+    public string GetDownloadFilePath(string downloadDirectory)
+    {
+        return Path.Combine(downloadDirectory, DownloadFileNameWithExtension);
     }
 
     /// <summary>

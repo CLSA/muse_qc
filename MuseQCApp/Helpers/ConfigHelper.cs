@@ -76,11 +76,21 @@ public class ConfigHelper
         string? folderName = GetStringFromConfig("EdfStorageFolderName");
         if (folderName is null)
         {
+            Logging.LogWarning("Null edf storage directory returned from config");
             return null;
         }
 
         string appName = AppDomain.CurrentDomain.FriendlyName;
         string partialDirPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+        string? edfStorageFolder = Path.Combine(partialDirPath, appName, folderName);
+
+        // ensure the edf storage folder is created
+        if (Directory.Exists(edfStorageFolder) == false)
+        {
+            Logging.LogWarning($"Creating edf storage directory at {edfStorageFolder}");
+            Directory.CreateDirectory(edfStorageFolder);
+        }
         return Path.Combine(partialDirPath, appName, folderName);
     }
 

@@ -19,8 +19,8 @@ public interface IGoogleBucket
     /// <summary>
     /// Download the requested files from the google bucket
     /// </summary>
-    /// <param name="filePathsDict">A list of filenames to download</param>
-    /// <param name="storageDirPath">The folder to store the downloaded files in</param>
+    /// <param name="filePaths">A list of filenames to download</param>
+    /// <param name="edfStorageFolder">The folder to store the downloaded files in</param>
     /// <returns>True if all requested files were downloaded, otherwise false</returns>
-    public bool DownloadFiles(List<GBDownloadInfoModel> filePaths);
+    public List<GBDownloadInfoModel> DownloadFiles(List<GBDownloadInfoModel> filePaths, string edfStorageFolder);
 }
