@@ -1,4 +1,6 @@
-﻿namespace MuseQCApp.Models;
+﻿using MuseQCApp.Logic;
+
+namespace MuseQCApp.Models;
 
 /// <summary>
 /// Information that is needed from Google Bucket downloads 
@@ -69,111 +71,15 @@ public class GBDownloadInfoModel
         // Sample file name:
         //      2023-06-18T00:31:31-04:00_6002-CNZB-5F0A_ww75958498_acc
         //      [DateTime]       [Offset] [Pod ID]      [Weston ID] [Data type]
-        CollectionDateTime = GetStartDateTimeFromFileName(FileNameWithoutExtension);
-        TimeZoneOffset = GetTimezoneOffsetFromFileName(FileNameWithoutExtension);
-        PodID = GetPodIDFromFileName(FileNameWithoutExtension);
-        WestonID = GetWestonIDFromFileName(FileNameWithoutExtension);
-        DataType = GetDataTypeFromFileName(FileNameWithoutExtension);
+        CollectionDateTime = MuseGBFileName.GetStartDateTime(FileNameWithoutExtension);
+        TimeZoneOffset = MuseGBFileName.GetTimezoneOffset(FileNameWithoutExtension);
+        PodID = MuseGBFileName.GetPodID(FileNameWithoutExtension);
+        WestonID = MuseGBFileName.GetWestonID(FileNameWithoutExtension);
+        DataType = MuseGBFileName.GetDataType(FileNameWithoutExtension);
     }
 
     public string GetDownloadFilePath(string downloadDirectory)
     {
         return Path.Combine(downloadDirectory, DownloadFileNameWithExtension);
-    }
-
-    /// <summary>
-    /// Get the start date time from the file name
-    /// </summary>
-    /// <param name="fileName">The file name</param>
-    /// <returns>The start datetime if it could be parsed, otherwise null</returns>
-    private DateTime? GetStartDateTimeFromFileName(string fileName)
-    {
-        try
-        {
-            string startDateTimeStr = fileName.Substring(0,19);
-            bool dateParsed = DateTime.TryParse(startDateTimeStr, out DateTime startDateTime);
-            if (dateParsed)
-            {
-                return startDateTime;
-            }
-        }
-        catch { }
-        return null;
-    }
-
-    /// <summary>
-    /// Get the time zone offset from the file name
-    /// </summary>
-    /// <param name="fileName">The file name</param>
-    /// <returns>The time zone offset if it could be parsed, otherwise null</returns>
-    private float? GetTimezoneOffsetFromFileName(string fileName)
-    {
-        try
-        {
-            string hourStr = fileName.Substring(20,2);
-            string minStr = fileName.Substring(23,2);
-            bool hourParsed = int.TryParse(hourStr, out int hour);
-            bool minParsed = int.TryParse(minStr, out int minute);
-            if(hourParsed & minParsed)
-            {
-                float offset = (float)(hour + (minute / 60.0));
-                return fileName[19].Equals('-') ? offset * -1 : offset;
-            }
-        }
-        catch{}
-        return null;
-    }
-
-    /// <summary>
-    /// Get the pod id from the file name
-    /// </summary>
-    /// <param name="fileName">The file name</param>
-    /// <returns>The pod id if it could be parsed, otherwise null</returns>
-    private string? GetPodIDFromFileName(string fileName)
-    {
-        try
-        {
-            string podIdStr = fileName.Substring(26, 14);
-            if (podIdStr[4] == '-' & podIdStr[9] == '-')
-            {
-                return podIdStr;
-            }
-        }
-        catch { }
-        return null;
-    }
-
-    /// <summary>
-    /// Get the weston id from the file name
-    /// </summary>
-    /// <param name="fileName">The file name</param>
-    /// <returns>The weston id if it could be parsed, otherwise null</returns>
-    private string? GetWestonIDFromFileName(string fileName)
-    {
-        try
-        {
-            string westonIdStr = fileName.Substring(41, 10);
-            if (westonIdStr.ToLower().StartsWith("ww") || westonIdStr.ToLower().StartsWith("tt"))
-            {
-                return westonIdStr;
-            }
-        }
-        catch { }
-        return null;
-    }
-
-    /// <summary>
-    /// Get the data type from the file name
-    /// </summary>
-    /// <param name="fileName">The file name</param>
-    /// <returns>The data type if it could be parsed, otherwise null</returns>
-    private string? GetDataTypeFromFileName(string fileName)
-    {
-        try
-        {
-            return fileName.Split("_").Last();
-        }
-        catch { }
-        return null;
     }
 }
