@@ -369,3 +369,5 @@ appsettings.development.json
 # Ignore sample code that is not supposed to be committed
 /MuseQCApp/SampleCode.cs
 /Testing
+/MuseQCApp/R/edf_tools_200712.R
+/MuseQCApp/R/MUSE_clean_QC.R

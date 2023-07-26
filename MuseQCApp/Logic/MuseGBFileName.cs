@@ -21,7 +21,7 @@ public static class MuseGBFileName
     {
         try
         {
-            string startDateTimeStr = fileName.Substring(0, 19);
+            string startDateTimeStr = fileName.Substring(0, 17).Insert(13, ":").Insert(16, ":");
             bool dateParsed = DateTime.TryParse(startDateTimeStr, out DateTime startDateTime);
             if (dateParsed)
             {
@@ -64,7 +64,7 @@ public static class MuseGBFileName
     {
         try
         {
-            string podIdStr = fileName.Substring(26, 14);
+            string podIdStr = fileName.Substring(23, 14);
             if (podIdStr[4] == '-' & podIdStr[9] == '-')
             {
                 return podIdStr;
@@ -83,7 +83,7 @@ public static class MuseGBFileName
     {
         try
         {
-            string westonIdStr = fileName.Substring(41, 10);
+            string westonIdStr = fileName.Substring(38, 10);
             if (westonIdStr.ToLower().StartsWith("ww") || westonIdStr.ToLower().StartsWith("tt"))
             {
                 return westonIdStr;

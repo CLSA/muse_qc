@@ -8,6 +8,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="R\edf_tools_200712.R" />
+    <None Remove="R\MUSE_clean_QC.R" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="R\edf_tools_200712.R">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="R\MUSE_clean_QC.R">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
   </ItemGroup>

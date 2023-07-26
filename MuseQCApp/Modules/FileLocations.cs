@@ -160,15 +160,14 @@ public class FileLocations : IFileLocations
             // None Will not be null because No Null check already preformed above
             float offset = gbInfo.TimeZoneOffset ?? 0;
 
-            DateTime insertTime = DateTime.Now;
-            bool completed = Db.Collection.InsertBasicInfo(westonID, startDateTime, offset, podID, gbInfo.UploadDateTime, insertTime).Wait(5000);
+            bool completed = Db.Collection.InsertBasicInfo(westonID, startDateTime, offset, podID, gbInfo.UploadDateTime).Wait(5000);
             if (completed == false)
             {
                 Logging.LogError($"Unable to insert Collection Basic info into DB " +
                     $"WID: {westonID} Pod id: {podID} Offset: {offset} start: {startDateTime} Upload: {gbInfo.UploadDateTime}");
                 return false;
             }
-            Logging.LogInformation($"Inserted Basic info into DB at {insertTime}. WestonID: {westonID} Start: {startDateTime} ({offset}) Pod: {podID} Upload: {gbInfo.UploadDateTime}");
+            Logging.LogInformation($"Inserted Basic info into DB at {DateTime.Now}. WestonID: {westonID} Start: {startDateTime} ({offset}) Pod: {podID} Upload: {gbInfo.UploadDateTime}");
         }
         return true;
     }

@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS  museqc.`collection` (
   `jpgPath` varchar(256) DEFAULT NULL,
   `isRealDay` tinyint DEFAULT NULL,
   `hasProblem` tinyint DEFAULT NULL,
+  `museQualityVersion` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`collectionID`),
   UNIQUE (`westonID`, `startDateTime`, `podID`),
   KEY `WestonID_FK_idx` (`westonID`),

@@ -91,7 +91,63 @@ public class ConfigHelper
             Logging.LogWarning($"Creating edf storage directory at {edfStorageFolder}");
             Directory.CreateDirectory(edfStorageFolder);
         }
-        return Path.Combine(partialDirPath, appName, folderName);
+        return edfStorageFolder;
+    }
+
+    /// <summary>
+    /// Get the full path to the folder where output files should be stored 
+    /// after running the muse quality script
+    /// </summary>
+    /// <returns>The full path</returns>
+    public string? GetOutputStorageFolderPath()
+    {
+        string? folderName = GetStringFromConfig("OutputDataStorageFolderName");
+        if (folderName is null)
+        {
+            Logging.LogWarning("Null output storage directory returned from config");
+            return null;
+        }
+
+        string appName = AppDomain.CurrentDomain.FriendlyName;
+        string partialDirPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+        string? outputStorageFolder = Path.Combine(partialDirPath, appName, folderName);
+
+        // ensure the edf storage folder is created
+        if (Directory.Exists(outputStorageFolder) == false)
+        {
+            Logging.LogWarning($"Creating edf storage directory at {outputStorageFolder}");
+            Directory.CreateDirectory(outputStorageFolder);
+        }
+        return outputStorageFolder;
+    }
+
+    /// <summary>
+    /// Get the full path to the folder where output jpg files should be stored 
+    /// after running the muse quality script
+    /// </summary>
+    /// <returns>The full path</returns>
+    public string? GetJpgStorageFolderPath()
+    {
+        string? folderName = GetStringFromConfig("JpgStorageFolderName");
+        if (folderName is null)
+        {
+            Logging.LogWarning("Null jpg storage directory returned from config");
+            return null;
+        }
+
+        string? outputStorageFolder = GetOutputStorageFolderPath();
+        if (outputStorageFolder is null) return null;
+
+        string jpgStorageFolder = Path.Combine(outputStorageFolder, folderName);
+
+        // ensure the edf storage folder is created
+        if (Directory.Exists(jpgStorageFolder) == false)
+        {
+            Logging.LogWarning($"Creating edf storage directory at {jpgStorageFolder}");
+            Directory.CreateDirectory(jpgStorageFolder);
+        }
+        return jpgStorageFolder;
     }
 
     #endregion

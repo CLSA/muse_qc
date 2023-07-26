@@ -34,6 +34,7 @@ public class DependencyInjectionBuilder
                 .AddSingleton<IQualityReport, QualityReport>()
                 .AddSingleton<ICleanUp, CleanUp>()
                 .AddSingleton<IDataAccess, MySqlDataAccess>()
+                .AddSingleton<IMuseQualityDecisions, MuseQualityDecisionsV1>()
                 .AddSingleton<MysqlDBData>()
                 .AddLogging(options => {
                     string documentsDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -46,7 +47,7 @@ public class DependencyInjectionBuilder
                     string currentdate = DateTime.Now.ToString(DateConstants.DateFormat);
                     string logFilePath = Path.Combine(logFileDirectory, $"log_{currentdate}.txt");
 
-                    LogLevel minLogLevel = LogLevel.Information;
+                    LogLevel minLogLevel = LogLevel.Trace;
                     options.SetMinimumLevel(minLogLevel);
                     // Add file logger
                     options.AddFile(logFilePath, new FileLoggerConfiguration()

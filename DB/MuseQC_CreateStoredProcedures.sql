@@ -177,7 +177,7 @@ DROP procedure IF EXISTS `insert_qualityOutputs`;
 DELIMITER $$
 USE `museqc`$$
 CREATE PROCEDURE `insert_qualityOutputs` (
-	IN WID CHAR(10), IN StartDT DATETIME, IN OutputsAddedDT DATETIME, IN PodSerial CHAR(14), 
+	IN WID CHAR(10), IN StartDT DATETIME, IN PodSerial CHAR(14), 
 	IN Dur DOUBLE, IN Ch1 DOUBLE, IN Ch2 DOUBLE, IN Ch3 DOUBLE, IN Ch4 DOUBLE,
     IN Ch12 DOUBLE, IN Ch13 DOUBLE, IN Ch43 DOUBLE, IN Ch42 DOUBLE,
     IN FAny DOUBLE, IN FBoth DOUBLE, IN TAny DOUBLE, IN TBoth DOUBLE,
@@ -189,7 +189,7 @@ DECLARE cid INT unsigned;
 SET cid = (SELECT collectionID FROM collection WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial);
 
 UPDATE collection
-SET jpgPath = JpgPath, isRealDay = RealData, hasProblem = Problem, outputsAddedDateTime = OutputsAddedDT
+SET jpgPath = JpgPath, isRealDay = RealData, hasProblem = Problem, outputsAddedDateTime = NOW()
 WHERE collectionID = cid; 
 
 INSERT INTO museqc.qcstats (collectionID, duration, eegch1, eegch2, eegch3, eegch4, 

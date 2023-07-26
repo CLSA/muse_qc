@@ -27,14 +27,14 @@ public class CollectionData
     public Task UpdateEdfPath(string WID, DateTime StartDT, string PodSerial, string edfFullPath) =>
         _db.SaveData<dynamic>("update_edfPath", new { WID, StartDT, PodSerial, edfFullPath});
 
-    public Task InsertBasicInfo(string WID, DateTime StartDT, float TimeOffset, string PodSerial, DateTime UploadDT, DateTime BasicInfoAddedDT) =>
-        _db.SaveData<dynamic>("insert_collectionBasicInfo", new { WID, StartDT, TimeOffset, PodSerial, UploadDT, BasicInfoAddedDT });
+    public Task InsertBasicInfo(string WID, DateTime StartDT, float TimeOffset, string PodSerial, DateTime UploadDT) =>
+        _db.SaveData<dynamic>("insert_collectionBasicInfo", new { WID, StartDT, TimeOffset, PodSerial, UploadDT});
 
     public Task InsertQualityOutputs(string WID, DateTime StartDT, string PodSerial,
-        QCStatsModel qc, string JpgPath, bool RealData, bool Problem, DateTime OutputsAddedDT
+        QCStatsModel qc, string JpgPath, bool RealData, bool Problem
         ) =>
         _db.SaveData<dynamic>("insert_qualityOutputs", new { 
-            WID, StartDT, OutputsAddedDT, PodSerial,
+            WID, StartDT, PodSerial,
             qc.Dur, qc.Ch1, qc.Ch2, qc.Ch3, qc.Ch4,
             qc.Ch12, qc.Ch13, qc.Ch43, qc.Ch42,
             qc.FAny, qc.FBoth, qc.TAny, qc.TBoth,
