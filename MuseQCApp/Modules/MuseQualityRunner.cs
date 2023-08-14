@@ -74,6 +74,8 @@ public class MuseQualityRunner : IMuseQualityRunner
             return null;
         }
 
+        edfPath = edfPath.Replace( "\\", "/");
+
         // Run quality script
         Process cmd = CreateMuseQCProcess(edfPath, outputPath);
         Logging.LogInformation($"Processing {edfPath}. Output files will be stored in {outputPath}");
