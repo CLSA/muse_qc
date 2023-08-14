@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS  museqc.`collection` (
   `museQualityVersion` int UNSIGNED DEFAULT NULL,
   PRIMARY KEY (`collectionID`),
   UNIQUE (`westonID`, `startDateTime`, `podID`),
+  UNIQUE KEY `edfPath_UNIQUE` (`edfPath`),
   KEY `WestonID_FK_idx` (`westonID`),
   CONSTRAINT `WestonID_FK` FOREIGN KEY (`westonID`) REFERENCES `participants` (`westonID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

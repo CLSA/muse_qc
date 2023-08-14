@@ -86,10 +86,10 @@ DROP procedure IF EXISTS `insert_collectionBasicInfo`;
 DELIMITER $$
 USE `museqc`$$
 CREATE PROCEDURE `insert_collectionBasicInfo` (IN WID CHAR(10), IN StartDT DATETIME,
-	IN TimeOffset float, IN PodSerial CHAR(14), IN UploadDT DATETIME, IN BasicInfoAddedDT DATETIME)
+	IN TimeOffset float, IN PodSerial CHAR(14), IN UploadDT DATETIME)
 BEGIN
 INSERT INTO museqc.collection (westonID, startDateTime, timeZoneOffset, podID, uploadDateTime, basicInfoAddedDateTime) 
-VALUES (WID, StartDT, TimeOffset, PodSerial, UploadDT, BasicInfoAddedDT);
+VALUES (WID, StartDT, TimeOffset, PodSerial, UploadDT, NOW());
 END$$
 
 DELIMITER ;
@@ -143,8 +143,27 @@ BEGIN
 SELECT EXISTS(
 	SELECT *
 	FROM museqc.collection 
-	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial AND edfPath != NULL
+	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial AND edfPath IS NOT NULL
 );
+END$$
+
+DELIMITER ;
+
+-- ------------------------------------------
+-- procedure get_unprocessed_edfPaths
+-- ------------------------------------------
+USE `museqc`;
+DROP procedure IF EXISTS `get_unprocessed_edfPaths`;
+
+DELIMITER $$
+USE `museqc`$$
+CREATE PROCEDURE `get_unprocessed_edfPaths` ()
+BEGIN
+
+SELECT edfPath
+FROM museqc.collection 
+WHERE outputsAddedDateTime IS NULL AND edfPath IS NOT Null;
+
 END$$
 
 DELIMITER ;
@@ -162,7 +181,7 @@ BEGIN
 SELECT EXISTS(
 	SELECT *
 	FROM museqc.collection 
-	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial AND jpgPath != NULL
+	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial AND jpgPath IS NOT NULL
 );
 END$$
 
