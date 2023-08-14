@@ -143,7 +143,7 @@ BEGIN
 SELECT EXISTS(
 	SELECT *
 	FROM museqc.collection 
-	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial AND edfPath IS NOT NULL
+	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial AND edfPath IS NOT NULL AND edfPath != ""
 );
 END$$
 
@@ -162,7 +162,7 @@ BEGIN
 
 SELECT edfPath
 FROM museqc.collection 
-WHERE outputsAddedDateTime IS NULL AND edfPath IS NOT Null;
+WHERE outputsAddedDateTime IS NULL AND edfPath IS NOT Null AND edfPath != "";
 
 END$$
 
@@ -181,7 +181,7 @@ BEGIN
 SELECT EXISTS(
 	SELECT *
 	FROM museqc.collection 
-	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial AND jpgPath IS NOT NULL
+	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial AND jpgPath IS NOT NULL AND jpgPath != ""
 );
 END$$
 
@@ -201,14 +201,14 @@ CREATE PROCEDURE `insert_qualityOutputs` (
     IN Ch12 DOUBLE, IN Ch13 DOUBLE, IN Ch43 DOUBLE, IN Ch42 DOUBLE,
     IN FAny DOUBLE, IN FBoth DOUBLE, IN TAny DOUBLE, IN TBoth DOUBLE,
     IN FtAny DOUBLE, IN EegAny DOUBLE, IN EegAll DOUBLE,
-	IN JpgPath VARCHAR(256), IN RealData BOOLEAN, IN Problem BOOLEAN
+	IN JpgPath VARCHAR(256), IN RealData BOOLEAN, IN Problem BOOLEAN, IN QualityVersion INT
 )
 BEGIN
 DECLARE cid INT unsigned;  
 SET cid = (SELECT collectionID FROM collection WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial);
 
 UPDATE collection
-SET jpgPath = JpgPath, isRealDay = RealData, hasProblem = Problem, outputsAddedDateTime = NOW()
+SET jpgPath = JpgPath, isRealDay = RealData, hasProblem = Problem, outputsAddedDateTime = NOW(), museQualityVersion = QualityVersion
 WHERE collectionID = cid; 
 
 INSERT INTO museqc.qcstats (collectionID, duration, eegch1, eegch2, eegch3, eegch4, 
