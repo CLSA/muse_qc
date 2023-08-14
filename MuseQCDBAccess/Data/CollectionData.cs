@@ -24,6 +24,9 @@ public class CollectionData
     public Task<IEnumerable<bool>> EdfExists(string WID, DateTime StartDT, string PodSerial) =>
         _db.LoadData<bool, dynamic>("edf_exists", new { WID, StartDT, PodSerial });
 
+    public Task<IEnumerable<string>> GetUnprocessedEdfPaths() =>
+        _db.LoadData<string, dynamic>("get_unprocessed_edfPaths", new {});
+
     public Task UpdateEdfPath(string WID, DateTime StartDT, string PodSerial, string edfFullPath) =>
         _db.SaveData<dynamic>("update_edfPath", new { WID, StartDT, PodSerial, edfFullPath});
 
@@ -31,7 +34,7 @@ public class CollectionData
         _db.SaveData<dynamic>("insert_collectionBasicInfo", new { WID, StartDT, TimeOffset, PodSerial, UploadDT});
 
     public Task InsertQualityOutputs(string WID, DateTime StartDT, string PodSerial,
-        QCStatsModel qc, string JpgPath, bool RealData, bool Problem
+        QCStatsModel qc, string JpgPath, bool RealData, bool Problem, int QualityVersion
         ) =>
         _db.SaveData<dynamic>("insert_qualityOutputs", new { 
             WID, StartDT, PodSerial,
@@ -39,6 +42,7 @@ public class CollectionData
             qc.Ch12, qc.Ch13, qc.Ch43, qc.Ch42,
             qc.FAny, qc.FBoth, qc.TAny, qc.TBoth,
             qc.FtAny, qc.EegAny, qc.EegAll,
-            JpgPath, RealData, Problem
+            JpgPath, RealData, Problem,
+            QualityVersion
         });
 }
