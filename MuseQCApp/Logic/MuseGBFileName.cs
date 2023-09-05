@@ -19,9 +19,11 @@ public static class MuseGBFileName
     /// <returns>The start datetime if it could be parsed, otherwise null</returns>
     public static DateTime? GetStartDateTime(string fileName)
     {
+        // Convert windows filename to Gb filename if needed
+        fileName = GetGbFileName(fileName);
         try
         {
-            string startDateTimeStr = fileName.Substring(0, 17).Insert(13, ":").Insert(16, ":");
+            string startDateTimeStr = fileName.Substring(0, 19);
             bool dateParsed = DateTime.TryParse(startDateTimeStr, out DateTime startDateTime);
             if (dateParsed)
             {
@@ -39,6 +41,8 @@ public static class MuseGBFileName
     /// <returns>The time zone offset if it could be parsed, otherwise null</returns>
     public static float? GetTimezoneOffset(string fileName)
     {
+        // Convert windows filename to Gb filename if needed
+        fileName = GetGbFileName(fileName);
         try
         {
             string hourStr = fileName.Substring(20, 2);
@@ -62,9 +66,11 @@ public static class MuseGBFileName
     /// <returns>The pod id if it could be parsed, otherwise null</returns>
     public static string? GetPodID(string fileName)
     {
+        // Convert windows filename to Gb filename if needed
+        fileName = GetGbFileName(fileName);
         try
         {
-            string podIdStr = fileName.Substring(23, 14);
+            string podIdStr = fileName.Substring(26, 14);
             if (podIdStr[4] == '-' & podIdStr[9] == '-')
             {
                 return podIdStr;
@@ -81,9 +87,11 @@ public static class MuseGBFileName
     /// <returns>The weston id if it could be parsed, otherwise null</returns>
     public static string? GetWestonID(string fileName)
     {
+        // Convert windows filename to Gb filename if needed
+        fileName = GetGbFileName(fileName);
         try
         {
-            string westonIdStr = fileName.Substring(38, 10);
+            string westonIdStr = fileName.Substring(41, 10);
             if (westonIdStr.ToLower().StartsWith("ww") || westonIdStr.ToLower().StartsWith("tt"))
             {
                 return westonIdStr;
@@ -106,5 +114,40 @@ public static class MuseGBFileName
         }
         catch { }
         return null;
+    }
+
+    /// <summary>
+    /// Convert from a filename stored in the Muse google bucket to a filename 
+    /// that can be stored in a windows file system
+    /// </summary>
+    /// <param name="gbFilename">The filename from the Muse google bucket</param>
+    /// <returns>A filename compatible with the windows file system</returns>
+    public static string GbFileFileNameToWindowsFileName(string gbFilename)
+    {
+        return gbFilename.Replace(":", "");
+    }
+
+    /// <summary>
+    /// Convert from a windows filename back to the filename 
+    /// that is stored in the Muse google bucket
+    /// </summary>
+    /// <param name="windowsFilename">The filename used to store the file on windows</param>
+    /// <returns>The original google bucket filename</returns>
+    public static string WindowsFileNameToGbFileName(string windowsFilename)
+    {
+        return windowsFilename.Insert(13, ":").Insert(16, ":").Insert(22, ":");
+    }
+
+    /// <summary>
+    /// Converts the passed in string to a Google bucket filename if it is not already
+    /// </summary>
+    /// <param name="filename">The filename to use</param>
+    /// <returns>The google bucket version of the file name</returns>
+    private static string GetGbFileName(string filename)
+    {
+        if (filename.Contains(":"))
+            return filename;
+
+        return WindowsFileNameToGbFileName(filename);
     }
 }

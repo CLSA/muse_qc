@@ -17,7 +17,7 @@ public class GBDownloadInfoModel
     /// </summary>
     public string FileNameWithExtension => Path.GetFileName(FullFilePath);
 
-    public string DownloadFileNameWithExtension => FileNameWithExtension.Replace(":", "");
+    public string DownloadFileNameWithExtension => MuseGBFileName.GbFileFileNameToWindowsFileName(FileNameWithExtension);
 
     /// <summary>
     /// The file name without extension
