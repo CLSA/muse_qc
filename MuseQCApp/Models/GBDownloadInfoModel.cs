@@ -30,6 +30,21 @@ public class GBDownloadInfoModel
     public DateTime UploadDateTime { get; init; }
 
     /// <summary>
+    /// The Size of the file
+    /// </summary>
+    public double Size { get; init; }
+
+    /// <summary>
+    /// The units for the size of the file
+    /// </summary>
+    public string SizeUnits { get; init; }
+
+    /// <summary>
+    /// True if the size of the file is less than 1 megabyte, false otherwise
+    /// </summary>
+    public bool LessThan1mb => SizeUnits.ToLower().Equals("kib") && Size < 1000;
+
+    /// <summary>
     /// The Date and Time the data collection started
     /// </summary>
     public DateTime? CollectionDateTime { get; init; }
@@ -63,10 +78,12 @@ public class GBDownloadInfoModel
     /// Default constructor
     /// </summary>
     /// <param name="fullFilePath">The full file path to where the file is stored in the google bucket</param>
-    public GBDownloadInfoModel(string fullFilePath, DateTime uploadDateTime)
+    public GBDownloadInfoModel(string fullFilePath, DateTime uploadDateTime, double size, string sizeUnits)
     {
         FullFilePath = fullFilePath;
         UploadDateTime = uploadDateTime;
+        Size = size;
+        SizeUnits = sizeUnits;
 
         // Sample file name:
         //      2023-06-18T00:31:31-04:00_6002-CNZB-5F0A_ww75958498_acc

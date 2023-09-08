@@ -1,26 +1,22 @@
 ﻿using Microsoft.Extensions.Logging;
-using MuseQCApp.Helpers;
-using MuseQCApp.Interfaces;
 using MuseQCApp.Models;
 using MuseQCDBAccess.Data;
 
-namespace MuseQCApp.Modules;
-
-public class FileLocations : IFileLocations
+namespace MuseQCApp.Helpers;
+public class DbHelpers
 {
-    #region private properties
 
-    /// <summary>
-    /// Helper to access configuration settings
-    /// </summary>
-    private ConfigHelper ConfigHelper { get; init; }
+    #region Private properties
 
     /// <summary>
     /// The logger to use
     /// </summary>
     private ILogger Logging { get; init; }
 
-    private readonly MysqlDBData Db;
+    /// <summary>
+    /// Helper to run stored procedures in database
+    /// </summary>
+    private MysqlDBData Db { get; init; }
 
     #endregion
 
@@ -29,64 +25,64 @@ public class FileLocations : IFileLocations
     /// <summary>
     /// Default constructor
     /// </summary>
-    /// <param name="configHelper">Helper to access configuration settings</param>
-    /// <param name="logging">The logger to use</param>
-    public FileLocations(ConfigHelper configHelper, ILogger logging, MysqlDBData dbData)
+    /// <param name="db"></param>
+    /// <param name="logging"></param>
+    public DbHelpers(MysqlDBData db, ILogger logging)
     {
-        ConfigHelper = configHelper;
+        Db = db;
         Logging = logging;
-        Db = dbData;
     }
 
     #endregion
 
-    #region Implemented interface methods
+    #region Public methods
 
-    public List<GBDownloadInfoModel> DecideFilesToDownload(List<GBDownloadInfoModel> downloadableFiles)
+    /// <summary>
+    /// Updates the database by:
+    /// 1. adding qc stats
+    /// 2. adding jpg path
+    /// 3. adding interpreted results
+    /// 4. removing edf path
+    /// </summary>
+    /// <param name="outputPaths">The paths to all files created by the quality script</param>
+    /// <param name="jpgDirPath">The new jpg directory where the jpg file should be moved to</param>
+    /// <returns>True if completed successfully, and false otherwise</returns>
+    public bool UpdateDbMuseQuality(MuseQualityResultsModel results)
     {
-        // Get the upload date time of the last file downloaded
-        DateTime? lastTimeDownloaded = GetUploadDTLastFileDownloaded();
+        // Update db with jpg path and data (qc stats, filename inferred data, and interpreted results)
+        Db.Collection.InsertQualityOutputs(results.WestonId, results.StartDate, results.PodSerial,
+            results.QcStats, results.NewJpgPath, results.RealData, results.DurProblem, results.QualityProblem, results.MuseQualityVersion);
 
-        // Check each file that can be downloaded and select those that need to be downloaded
-        List<GBDownloadInfoModel> filesToDownload = new();
-        foreach (GBDownloadInfoModel gbInfo in downloadableFiles)
+        // Remove edf path from db
+        bool edfExists = Db.Collection.EdfExists(results.WestonId, results.StartDate, results.PodSerial).Result.First();
+        string deviceInfoStr = $"Weston ID: {results.WestonId} Pod Serial: {results.PodSerial} Start Date: {results.StartDate}";
+        if (edfExists)
         {
-            try
-            {
-                // Ignore if missing information or if the upload date is earlier then the last file downloaded
-                if (gbInfo.NoNullValues == false
-                    || (lastTimeDownloaded != null && gbInfo.UploadDateTime.CompareTo(lastTimeDownloaded) < 0))
-                {
-                    continue;
-                }
-
-                bool dbUpToDate = InsertDataIntoDb(gbInfo);
-                if (dbUpToDate)
-                {
-                    filesToDownload.Add(gbInfo);
-                }
-            }
-            catch(Exception ex) 
-            {
-                Logging.LogError($"Error while evaluating {gbInfo.FileNameWithExtension}. Msg: {ex.Message}");
-            }
+            Db.Collection.UpdateEdfPath(results.WestonId, results.StartDate, results.PodSerial, "");
+            Logging.LogInformation($"Removed Edf file path from db for a collection with the following details. {deviceInfoStr}");
         }
-        return filesToDownload;
+        else
+        {
+            Logging.LogWarning($"No Edf file no was found in db for a collection with the following details. {deviceInfoStr}");
+        }
+        return true;
     }
 
-    public ReportInfoModel GetReportInfo(DateTime StartDate, DateTime EndDate)
+    /// <summary>
+    /// Adds the paths that were downloaded to the database
+    /// </summary>
+    /// <param name="pathsThatWereDownload">The information for files that were downloaded</param>
+    /// <param name="edfStorageFolderPath">The path to were edf files are stored</param>
+    public void UpdateDbWithDownloadedFilePaths(List<GBDownloadInfoModel> pathsThatWereDownload, string edfStorageFolderPath)
     {
-        throw new NotImplementedException();
+        foreach (GBDownloadInfoModel gbInfo in pathsThatWereDownload)
+        {
+            string fullFilePath = gbInfo.GetDownloadFilePath(edfStorageFolderPath);
+            if (gbInfo.NoNullValues == false) continue;
+            // Values below will never be null due to check above
+            Db.Collection.UpdateEdfPath(gbInfo.WestonID, gbInfo.CollectionDateTime.Value, gbInfo.PodID, fullFilePath).Wait();
+        }
     }
-
-    public List<string> NeedsQualityCheck()
-    {
-        throw new NotImplementedException();
-    }
-
-    #endregion
-
-    #region Private methods
 
     /// <summary>
     /// Get the upload date time of the last file downloaded
@@ -103,7 +99,7 @@ public class FileLocations : IFileLocations
     /// </summary>
     /// <param name="gbInfo">The google bucket info to use</param>
     /// <returns>True if there were not no problem, false if an error occurs</returns>
-    private bool InsertDataIntoDb(GBDownloadInfoModel gbInfo)
+    public bool InsertGBDataIntoDb(GBDownloadInfoModel gbInfo)
     {
         // Do not attempt to enter values in db if any data is null (aka missing)
         if (gbInfo.NoNullValues == false) return false;
@@ -120,6 +116,19 @@ public class FileLocations : IFileLocations
         // otherwise false if any errors occur
         return InsertCollectionBasicInfo(westonID, startDateTime, podID, gbInfo);
     }
+
+    /// <summary>
+    /// Gets all edf files that need quality checks
+    /// </summary>
+    /// <returns>a list of all edf files that need quality checks</returns>
+    public IEnumerable<string> GetEdfFilesThatNeedQualityChecks()
+    {
+        return Db.Collection.GetUnprocessedEdfPaths().Result;
+    }
+
+    #endregion
+
+    #region Private methods
 
     /// <summary>
     /// Insert the weston id into the db if it does not exists in the db
@@ -172,5 +181,5 @@ public class FileLocations : IFileLocations
         return true;
     }
 
-    #endregion
+#endregion  
 }

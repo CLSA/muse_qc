@@ -28,11 +28,6 @@ public class App
     private IGoogleBucket Bucket {  get; init; }
 
     /// <summary>
-    /// A module to use for making decisions on file locations
-    /// </summary>
-    private IFileLocations FilePaths { get; init; }
-
-    /// <summary>
     /// A module for running the muse quality checks
     /// </summary>
     private IMuseQualityRunner QualityRunner { get; init; }
@@ -48,11 +43,9 @@ public class App
     private IQualityReport QualityReport { get; init; }
 
     /// <summary>
-    /// A module for cleaning up the unnecessary files in the file system
+    /// Helper to interact with DB
     /// </summary>
-    private ICleanUp Clean { get; init; }
-
-    private MysqlDBData Db { get; init; }
+    private DbHelpers DbMethods { get; init; }
 
     #endregion
 
@@ -64,23 +57,19 @@ public class App
     /// <param name="configHelper">Helper to access configuration settings</param>
     /// <param name="logging">The logger to use</param>
     /// <param name="bucket">A module to use to interact with the google bucket</param>
-    /// <param name="filePaths">A module to use for making decisions on file locations</param>
     /// <param name="qualityRunner">A module for running the muse quality checks</param>
     /// <param name="museQuality">A module for determining is muse data quality is acceptable</param>
     /// <param name="qualityReport">A module for creating muse quality reports</param>
-    /// <param name="clean">A module for cleaning up the unnecessary files in the file system</param>
-    public App(ConfigHelper configHelper, ILogger logging, IGoogleBucket bucket, IFileLocations filePaths,
-        IMuseQualityRunner qualityRunner, IMuseQualityDecisions museQuality, IQualityReport qualityReport, ICleanUp clean, MysqlDBData db)
+    public App(ConfigHelper configHelper, ILogger logging, IGoogleBucket bucket,IMuseQualityRunner qualityRunner, 
+        IMuseQualityDecisions museQuality, IQualityReport qualityReport, MysqlDBData db)
     {
         ConfigHelper = configHelper;
         Logging = logging;
         Bucket = bucket;
-        FilePaths = filePaths;
         QualityRunner = qualityRunner;
         MuseQuality = museQuality;
         QualityReport = qualityReport;
-        Clean = clean;
-        Db = db;
+        DbMethods = new(db, logging);
     }
 
     #endregion
@@ -95,20 +84,18 @@ public class App
         string appName = AppDomain.CurrentDomain.FriendlyName;
         Logging.LogInformation($"{appName} started running");
 
-        // Determine files that need to be downloaded from the bucket
+        // Get list of files on google bucket
         List<GBDownloadInfoModel> pathsOnBucket = Bucket.GetFilePaths();
-        List<GBDownloadInfoModel> pathsToDownload = FilePaths.DecideFilesToDownload(pathsOnBucket);
 
-        // TODO: remove when done testing
-        pathsToDownload = SelectXFiles(pathsToDownload, 10); 
+        // Download files that have not had quality checks run
+        // and are not currently downloaded
+        DownloadFiles(pathsOnBucket, 1);
 
-        // Download files and update DB with paths
-        string? edfStorageFolderPath = ConfigHelper.GetEdfStorageFolderPath();
-        if(string.IsNullOrEmpty(edfStorageFolderPath) == false)
-        {
-            List<GBDownloadInfoModel> filesDownloadedSuccessfully = Bucket.DownloadFiles(pathsToDownload, edfStorageFolderPath);
-            UpdateDbWithDownloadedFilePaths(filesDownloadedSuccessfully, edfStorageFolderPath);
-        }
+        // Run quality checks
+        RunQualityChecks();
+
+        // Create reports
+        // TODO: Implement
 
         Logging.LogInformation($"{appName} done running");
     }
@@ -118,17 +105,95 @@ public class App
     #region Private methods
 
     /// <summary>
-    /// Adds the paths that were downloaded to the database
+    /// Download all files
     /// </summary>
-    /// <param name="pathsThatWereDownload">The information for files that were downloaded</param>
-    /// <param name="edfStorageFolderPath">The path to were edf files are stored</param>
-    private void UpdateDbWithDownloadedFilePaths(List<GBDownloadInfoModel> pathsThatWereDownload, string edfStorageFolderPath)
+    /// <param name="pathsOnBucket">The paths to all files that exist in the google bucket</param>
+    /// <param name="maxFilesToDownload">The maximum number of files that should be downloaded</param>
+    private void DownloadFiles(List<GBDownloadInfoModel> pathsOnBucket, int maxFilesToDownload = 10)
     {
-        foreach (GBDownloadInfoModel gbInfo in pathsThatWereDownload)
+        // Select all files that need to be downloaded
+        List<GBDownloadInfoModel> pathsToDownload = DecideFilesToDownload(pathsOnBucket);
+
+        // Reduce the amount of files to download to a max specified amount
+        pathsToDownload = SelectXFiles(pathsToDownload, maxFilesToDownload); pathsToDownload = SelectXFiles(pathsToDownload, maxFilesToDownload);
+        
+        // Download files and update DB with paths
+        string? edfStorageFolderPath = ConfigHelper.GetEdfStorageFolderPath();
+        if (string.IsNullOrEmpty(edfStorageFolderPath) == false)
         {
-            string fullFilePath = gbInfo.GetDownloadFilePath(edfStorageFolderPath);
-            if (gbInfo.NoNullValues == false) continue;
-            Db.Collection.UpdateEdfPath(gbInfo.WestonID, gbInfo.CollectionDateTime.Value, gbInfo.PodID, fullFilePath).Wait();
+            List<GBDownloadInfoModel> filesDownloadedSuccessfully = Bucket.DownloadFiles(pathsToDownload, edfStorageFolderPath);
+            DbMethods.UpdateDbWithDownloadedFilePaths(filesDownloadedSuccessfully, edfStorageFolderPath);
+        }
+        else
+        {
+            Logging.LogInformation($"No edf storage folder found in configuration");
+        }
+    }
+
+    /// <summary>
+    /// Runs quality checks on files that require quality checks
+    /// </summary>
+    private void RunQualityChecks()
+    {
+        // Get output and jpg folder paths (return if either is null)
+        string? outDirPath = ConfigHelper.GetOutputStorageFolderPath();
+        string? jpgDirPath = ConfigHelper.GetJpgStorageFolderPath();
+        if (outDirPath is null || jpgDirPath is null) return;
+
+        // Format out dir path and Create out folder if it does not exist
+        string outDir = $"{outDirPath.Replace("\\", "/")}";
+        if (Directory.Exists(outDir) == false) 
+        { 
+            Directory.CreateDirectory(outDir);
+        }
+
+        // Determine files that need to have quality checks run
+        IEnumerable<string> edfFiles = DbMethods.GetEdfFilesThatNeedQualityChecks();
+
+        // Run quality checks
+        foreach (string edf in edfFiles)
+        {
+            // Log startime and file size of file that is starting to run
+            DateTime startTime = DateTime.Now;
+            long fileSize = new FileInfo(edf).Length;
+            Logging.LogInformation($"Started: {edf} at {startTime}. FileSize: {fileSize}");
+
+            // Run quality check R script 
+            MuseQualityOutputPathsModel? outputPaths = QualityRunner.RunMuseQualityCheck(edf, outDir);
+
+            // Log error if any of the output files do not exist
+            if (outputPaths is null || File.Exists(outputPaths.JpgPath) == false
+                || File.Exists(outputPaths.CsvPath) == false || File.Exists(outputPaths.EdfPath) == false)
+            {
+                Logging.LogError($"Not all output files were created by the quality script for input file: {edf}");
+                continue;
+            }
+
+            // Update Muse quality information in DB
+            MuseQualityResultsModel? resultsPackage = CreateMuseQualityResultsModel(outputPaths, jpgDirPath);
+            bool runSuccessfully = false;
+            if(resultsPackage is not null)
+            {
+                runSuccessfully = DbMethods.UpdateDbMuseQuality(resultsPackage);
+            }
+            
+
+            // Log error if unable to update the DB
+            if (runSuccessfully == false)
+            {
+                Logging.LogError($"Unable to update db with output paths for input file: {edf}\n" +
+                    $"\tJpg: {outputPaths.JpgPath}\n\tCsv: {outputPaths.CsvPath}\n\tEdf: {outputPaths.EdfPath}\n");
+                continue;
+            }
+
+            // Log end time when completed running quality check for participant
+            DateTime endTime = DateTime.Now;
+            Logging.LogInformation($"Completed: {edf} at {endTime}. Duration: {endTime-startTime}");
+            
+            // Delete uneeded files
+            File.Delete(outputPaths.CsvPath);
+            File.Delete(outputPaths.EdfPath);
+            File.Delete(edf);
         }
     }
 
@@ -150,82 +215,87 @@ public class App
         return smallerPathsToDownload;
     }
 
-    private void RunQualityChecks(List<string> edfFiles)
+    /// <summary>
+    /// Creates a MuseQualityResultsModel with all of the information required by the data base
+    /// </summary>
+    /// <param name="outputPaths">The paths to the files output by the Muse Quality R script</param>
+    /// <param name="jpgDirPath">The path to the directory where jpg files should be stored</param>
+    /// <returns>a MuseQualityResultsModel with all of the information required by the data base</returns>
+    private MuseQualityResultsModel? CreateMuseQualityResultsModel(MuseQualityOutputPathsModel outputPaths, string jpgDirPath)
     {
-        // Get output and jpg folder paths (return if either is null)
-        string? outDirPath = ConfigHelper.GetOutputStorageFolderPath();
-        string? jpgDirPath = ConfigHelper.GetJpgStorageFolderPath();
-        if (outDirPath is null || jpgDirPath is null) return;
-
-        // Create out folder if it does not exist
-        string outDir = $"{outDirPath.Replace("\\", "/")}";
-
-        // Run quality checks
-        foreach (string edf in edfFiles)
-        {
-            Logging.LogInformation($"Started: {edf}");
-            // Run quality check R script 
-            MuseQualityOutputPaths outputPaths = QualityRunner.RunMuseQualityCheck(edf, outDir);
-
-            // Check if files exist
-            bool outputFilesExist = outputPaths is not null &&
-                File.Exists(outputPaths.JpgPath) 
-                && File.Exists(outputPaths.CsvPath) 
-                && File.Exists(outputPaths.EdfPath);
-            if (outputFilesExist == false)
-            {
-                Logging.LogError($"Not all output files were created by the quality script for input file: {edf}");
-                continue;
-            }
-
-            bool runSuccessfully = UpdateDb(outputPaths, jpgDirPath);
-
-            if (runSuccessfully == false)
-            {
-                continue;
-            }
-
-            Logging.LogInformation($"Completed: {edf}");
-            //File.Delete(outputPaths.CsvPath);
-            File.Delete(outputPaths.EdfPath);
-            //File.Delete(edf);
-        }
-    }
-
-    private bool UpdateDb(MuseQualityOutputPaths outputPaths, string jpgDirPath)
-    {
-        // delete output csv, output edf and input edf
+        // Read data from output csv
         QCStatsModel? qcStats = QualityRunner.ReadOutputCsv(outputPaths.CsvPath);
-        // NOTE: It is assumed that the jpg filename is the same
-        // as the google bucket name
+
+        // Interpret values from jpg filename
+        // NOTE: Assumes jpg filename is the same as the google bucket name
         string fileName = Path.GetFileNameWithoutExtension(outputPaths.JpgPath);
         string? westonId = MuseGBFileName.GetWestonID(fileName);
         string? podSerial = MuseGBFileName.GetPodID(fileName);
         DateTime? startDate = MuseGBFileName.GetStartDateTime(fileName);
+
+        // Log error if any of the data is missing
         if (qcStats is null || westonId is null || podSerial is null || startDate is null)
         {
             Logging.LogError($"Unable to read all info. qcStats: {(qcStats is null ? "NULL" : "Correct")}" +
                 $" westonID: {westonId} podSerial: {podSerial} startDate: {startDate}");
-            return false;
+            return null;
         }
 
+        // Interpret the results
         bool realData = MuseQuality.IsActualNight(qcStats);
-        bool problem = MuseQuality.HasProblem(qcStats);
+        bool durProblem = MuseQuality.HasDurationProblem(qcStats);
+        bool qualityProblem = MuseQuality.HasQualityProblem(qcStats);
 
         // Move jpg file to jpg specific folder
         string newJpgPath = Path.Combine(jpgDirPath, Path.GetFileName(outputPaths.JpgPath));
         File.Move(outputPaths.JpgPath, newJpgPath);
 
-        // Update db with jpg path and data from csv
-        Db.Collection.InsertQualityOutputs(westonId, startDate.Value, podSerial, qcStats, newJpgPath, realData, problem);
-
-        // Remove edf path from db
-        bool edfExists = Db.Collection.EdfExists(westonId, startDate.Value, podSerial).Result.First();
-        if (edfExists)
-        {
-            Db.Collection.UpdateEdfPath(westonId, startDate.Value, podSerial, "");
-        }
-        return true;
+        return new MuseQualityResultsModel(qcStats, fileName, westonId, podSerial, startDate.Value, realData, durProblem, qualityProblem, MuseQuality.GetVersionNumber(), newJpgPath);
     }
+
+    /// <summary>
+    /// Creates a list of the files that are not currently downloaded that need to have anlysis run
+    /// </summary>
+    /// <param name="downloadableFiles">A list of information on all edf files that exist in the google bucket</param>
+    /// <returns>A list of the files that are not currently downloaded that need to have anlysis run</returns>
+    public List<GBDownloadInfoModel> DecideFilesToDownload(List<GBDownloadInfoModel> downloadableFiles)
+    {
+        // Get the upload date time of the last file downloaded
+        DateTime? lastTimeDownloaded = DbMethods.GetUploadDTLastFileDownloaded();
+
+        // Check each file that can be downloaded and select those that need to be downloaded
+        List<GBDownloadInfoModel> filesToDownload = new();
+        foreach (GBDownloadInfoModel gbInfo in downloadableFiles)
+        {
+            try
+            {
+                // Ignore if missing information or if the upload date is earlier then the last file downloaded
+                if (gbInfo.NoNullValues == false
+                    || lastTimeDownloaded != null && gbInfo.UploadDateTime.CompareTo(lastTimeDownloaded) < 0)
+                {
+                    continue;
+                }
+
+                // Skip if file is less than 1 megabyte
+                if (gbInfo.LessThan1mb)
+                {
+                    Logging.LogTrace($"File size too low. Not being added to files to download. size: {gbInfo.Size} {gbInfo.SizeUnits} path: {gbInfo.FullFilePath}");
+                    continue;
+                }
+
+                bool dbUpToDate = DbMethods.InsertGBDataIntoDb(gbInfo);
+                if (dbUpToDate)
+                {
+                    filesToDownload.Add(gbInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.LogError($"Error while evaluating {gbInfo.FileNameWithExtension}. Msg: {ex.Message}");
+            }
+        }
+        return filesToDownload;
+    }
+
     #endregion
 }

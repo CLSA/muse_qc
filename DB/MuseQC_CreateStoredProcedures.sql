@@ -121,7 +121,7 @@ DROP procedure IF EXISTS `update_edfPath`;
 
 DELIMITER $$
 USE `museqc`$$
-CREATE PROCEDURE `update_edfPath` (IN WID CHAR(10), IN StartDT DATETIME, IN PodSerial CHAR(14), IN edfFullPath VARCHAR(256))
+CREATE PROCEDURE `update_edfPath` (IN WID CHAR(10), IN StartDT DATETIME, IN PodSerial CHAR(14), IN edfFullPath VARCHAR(128))
 BEGIN
 UPDATE museqc.collection
 SET edfPath = edfFullPath
@@ -201,14 +201,21 @@ CREATE PROCEDURE `insert_qualityOutputs` (
     IN Ch12 DOUBLE, IN Ch13 DOUBLE, IN Ch43 DOUBLE, IN Ch42 DOUBLE,
     IN FAny DOUBLE, IN FBoth DOUBLE, IN TAny DOUBLE, IN TBoth DOUBLE,
     IN FtAny DOUBLE, IN EegAny DOUBLE, IN EegAll DOUBLE,
-	IN JpgPath VARCHAR(256), IN RealData BOOLEAN, IN Problem BOOLEAN, IN QualityVersion INT
+	IN JpgPath VARCHAR(128), IN RealData BOOLEAN, 
+    IN DurProb BOOLEAN, IN QualityProb BOOLEAN, IN QualityVersion INT
 )
 BEGIN
 DECLARE cid INT unsigned;  
 SET cid = (SELECT collectionID FROM collection WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial);
 
 UPDATE collection
-SET jpgPath = JpgPath, isRealDay = RealData, hasProblem = Problem, outputsAddedDateTime = NOW(), museQualityVersion = QualityVersion
+SET 
+jpgPath = JpgPath, 
+isRealDay = RealData, 
+hasDurationProblem = DurProb, 
+hasQualityProblem = QualityProb, 
+outputsAddedDateTime = NOW(), 
+museQualityVersion = QualityVersion
 WHERE collectionID = cid; 
 
 INSERT INTO museqc.qcstats (collectionID, duration, eegch1, eegch2, eegch3, eegch4, 

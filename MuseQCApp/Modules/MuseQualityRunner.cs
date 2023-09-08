@@ -60,7 +60,7 @@ public class MuseQualityRunner : IMuseQualityRunner
 
     #region Implemented interface methods
 
-    public MuseQualityOutputPaths? RunMuseQualityCheck(string edfPath, string outputPath)
+    public MuseQualityOutputPathsModel? RunMuseQualityCheck(string edfPath, string outputPath)
     {
         // output path must have a "/" at the end in order to work with R script
         if (outputPath.EndsWith("/") == false)
@@ -90,7 +90,7 @@ public class MuseQualityRunner : IMuseQualityRunner
         string outEdfPath = $"{outPathWithoutExtension}.filtered.edf";
 
         // Return the paths where files should now be stored
-        return new MuseQualityOutputPaths(jpgPath, csvPath, outEdfPath);
+        return new MuseQualityOutputPathsModel(jpgPath, csvPath, outEdfPath);
     }
 
     public QCStatsModel? ReadOutputCsv(string csvPath)

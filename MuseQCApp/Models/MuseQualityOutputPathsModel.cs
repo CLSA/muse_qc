@@ -3,7 +3,7 @@
 /// <summary>
 /// A model to store full paths for the output files created by the muse quality script
 /// </summary>
-public class MuseQualityOutputPaths
+public class MuseQualityOutputPathsModel
 {
     /// <summary>
     /// The full path to the output jpg file
@@ -26,7 +26,7 @@ public class MuseQualityOutputPaths
     /// <param name="jpgPath">The full path to the output jpg file</param>
     /// <param name="csvPath">The full path to the output csv file</param>
     /// <param name="edfPath">The full path to the output edf file</param>
-    public MuseQualityOutputPaths(string jpgPath, string csvPath, string edfPath)
+    public MuseQualityOutputPathsModel(string jpgPath, string csvPath, string edfPath)
     {
         JpgPath = jpgPath;
         CsvPath = csvPath;

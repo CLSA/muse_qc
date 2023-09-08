@@ -25,17 +25,20 @@ public class DependencyInjectionBuilder
             //       of the file in a comment. Please check that the expected configuration parameters
             //       are in the appsettings.production.json to ensure everything works as expected.
             services
+                // Add single classes to DP
                 .AddTransient<App>()
+                .AddSingleton<MysqlDBData>()
+                // Setup single classes used by Interfaces
+                // TODO: This is messy, clean up
                 .AddSingleton<ConfigHelper>()
+                // Setup Interfaces
                 .AddSingleton<IGoogleBucket, GoogleBucket>()
-                .AddSingleton<IFileLocations, FileLocations>()
                 .AddSingleton<ISiteLookup, SiteLookup>()
                 .AddSingleton<IMuseQualityRunner, MuseQualityRunner>()
                 .AddSingleton<IQualityReport, QualityReport>()
-                .AddSingleton<ICleanUp, CleanUp>()
                 .AddSingleton<IDataAccess, MySqlDataAccess>()
                 .AddSingleton<IMuseQualityDecisions, MuseQualityDecisionsV1>()
-                .AddSingleton<MysqlDBData>()
+                // Setup and add logger
                 .AddLogging(options => {
                     string documentsDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                     string appName = AppDomain.CurrentDomain.FriendlyName;
@@ -47,7 +50,7 @@ public class DependencyInjectionBuilder
                     string currentdate = DateTime.Now.ToString(DateConstants.DateFormat);
                     string logFilePath = Path.Combine(logFileDirectory, $"log_{currentdate}.txt");
 
-                    LogLevel minLogLevel = LogLevel.Trace;
+                    LogLevel minLogLevel = LogLevel.Information;
                     options.SetMinimumLevel(minLogLevel);
                     // Add file logger
                     options.AddFile(logFilePath, new FileLoggerConfiguration()

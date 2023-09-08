@@ -3,7 +3,7 @@
     public class QCStatsModel
     {
         /// <summary>
-        /// The duration of the collection
+        /// The duration of the collection in hours
         /// </summary>
         public double Dur { get; set; }
 

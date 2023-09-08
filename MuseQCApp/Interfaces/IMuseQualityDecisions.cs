@@ -21,8 +21,15 @@ public interface IMuseQualityDecisions
     /// 
     /// </summary>
     /// <param name="stats">The QC stats to evaluate</param>
-    /// <returns>True if there is a problem, false otherwise</returns>
-    public bool HasProblem(QCStatsModel stats);
+    /// <returns>True if there is a duration problem, false otherwise</returns>
+    public bool HasDurationProblem(QCStatsModel stats);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="stats">The QC stats to evaluate</param>
+    /// <returns>True if there is a problem with quality other than duration, false otherwise</returns>
+    public bool HasQualityProblem(QCStatsModel stats);
 
     /// <summary>
     /// Get the version number of the implementation

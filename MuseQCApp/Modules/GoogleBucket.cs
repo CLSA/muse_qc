@@ -56,9 +56,10 @@ public class GoogleBucket : IGoogleBucket
         foreach(var gbInfo in filesToDownload)
         {
             string fullFilePath = gbInfo.GetDownloadFilePath(edfStorageFolder);
+            Logging.LogInformation($"Download started for {fullFilePath}");
             cmd.StandardInput.WriteLine($"gsutil cp \"{gbInfo.FullFilePath}\" \"{fullFilePath}\"");
         }
-        
+
         // Close connection with command line
         cmd.StandardInput.Flush();
         cmd.StandardInput.Close();
@@ -174,7 +175,7 @@ public class GoogleBucket : IGoogleBucket
                     GBDownloadInfoModel? gbInfo = GetGbInfoFromLine(line);
                     if(gbInfo != null)
                     {
-                        Logging.LogInformation($"Added file to list of eeg files that exist in google bucket:\n\t{gbInfo.FileNameWithExtension}");
+                        Logging.LogTrace($"Added file to list of eeg files that exist in google bucket:\n\t{gbInfo.FileNameWithExtension}");
                         eegFiles.Add(gbInfo);
                     }
                 }
@@ -200,6 +201,8 @@ public class GoogleBucket : IGoogleBucket
 
         string fullPath = line.Trim().Split().Last();
         DateTime uploadDateTime = DateTime.Now;
+        double fileSize = 0;
+        string units = "";
         try
         {
             string[] lineSplit = line.Trim().Split()
@@ -208,14 +211,16 @@ public class GoogleBucket : IGoogleBucket
                 .ToArray();
             string uploadDateStr = lineSplit[2];
             uploadDateTime = DateTime.Parse(uploadDateStr);
+            fileSize = double.Parse(lineSplit[0]);
+            units = lineSplit[1];
         }
         catch
         {
-            Logging.LogError($"Date could not be identified in the following line:\n\t{line.Trim()}");
+            Logging.LogError($"Date and/or file size could not be identified in the following line:\n\t{line.Trim()}");
             return null;
         }
 
-        GBDownloadInfoModel gbInfo = new(fullPath, uploadDateTime);
+        GBDownloadInfoModel gbInfo = new(fullPath, uploadDateTime, fileSize, units);
         if (gbInfo.NoNullValues)
         {
             if (gbInfo.DataType.ToLower().Equals("eeg"))

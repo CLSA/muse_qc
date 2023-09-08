@@ -14,7 +14,7 @@ public interface IMuseQualityRunner
     /// <param name="edfPath">The path to the edf file</param>
     /// <param name="outputPath">The path to the directory where the output data should be stored</param>
     /// <returns>The full paths of output files</returns>
-    public MuseQualityOutputPaths? RunMuseQualityCheck(string edfPath, string outputPath);
+    public MuseQualityOutputPathsModel? RunMuseQualityCheck(string edfPath, string outputPath);
 
     /// <summary>
     /// Read data from the output csv
