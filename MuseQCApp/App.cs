@@ -79,7 +79,7 @@ public class App
     /// <summary>
     /// Runs the quality checks application process
     /// </summary>
-    public void Run()
+    public void Run(int maxFilesToDownloadAtOnce = 10, int maxFilesToDownload = -1)
     {
         string appName = AppDomain.CurrentDomain.FriendlyName;
         Logging.LogInformation($"{appName} started running");
@@ -87,12 +87,26 @@ public class App
         // Get list of files on google bucket
         List<GBDownloadInfoModel> pathsOnBucket = Bucket.GetFilePaths();
 
-        // Download files that have not had quality checks run
-        // and are not currently downloaded
-        DownloadFiles(pathsOnBucket, 1);
+        int filesDownloaded = 0;
+        while( filesDownloaded < maxFilesToDownload)
+        {
+            // decide how many files to download this loop execution
+            // while ensuring the max total number is not exceeded
+            int filesLeftToDownload = (maxFilesToDownload - filesDownloaded);
+            int numFilesToDownload = filesLeftToDownload > maxFilesToDownloadAtOnce 
+                ? maxFilesToDownloadAtOnce : filesLeftToDownload;
+            
+            // Download files that have not had quality checks run
+            // and are not currently downloaded
+            DownloadFiles(pathsOnBucket, numFilesToDownload);
 
-        // Run quality checks
-        RunQualityChecks();
+            // Run quality checks
+            RunQualityChecks();
+
+            // increment the number of files that have been downloaded
+            filesDownloaded+= numFilesToDownload;
+        }
+        
 
         // Create reports
         // TODO: Implement
