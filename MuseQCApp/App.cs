@@ -283,9 +283,13 @@ public class App
         {
             try
             {
-                // Ignore if missing information or if the upload date is earlier then the last file downloaded
+                // Ignore if:
+                // 1. Missing information
+                // 2. The upload date is earlier then the last file downloaad
+                // 3. The id is not a ww id
                 if (gbInfo.NoNullValues == false
-                    || lastTimeDownloaded != null && gbInfo.UploadDateTime.CompareTo(lastTimeDownloaded) < 0)
+                    || lastTimeDownloaded != null && gbInfo.UploadDateTime.CompareTo(lastTimeDownloaded) < 0
+                    || gbInfo.WestonID.ToLower().StartsWith("ww") == false)
                 {
                     continue;
                 }
