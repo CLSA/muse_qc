@@ -15,7 +15,7 @@ public class MuseQualityDecisionsV1 : IMuseQualityDecisions
         // 1. Must be an actual night of data in order to have a duration problem
         // 2. A duration of 6 hours or above is considered a good night
         // NOTE: Ft.Any of >= 0.8 is the threshold
-        return IsTest(stats) && stats.Dur < 6;
+        return stats.Dur < 6;
     }
 
     public bool HasQualityProblem(QCStatsModel stats)
@@ -24,7 +24,7 @@ public class MuseQualityDecisionsV1 : IMuseQualityDecisions
         // 1. Must be an actual night of data in order to have a duration problem
         // 2. A threshold of 0.8 or above is acceptable for FT.any
         // NOTE: Ft.Any of >= 0.8 is the threshold
-        return IsTest(stats) && stats.FtAny < 0.8;
+        return stats.FtAny < 0.8;
     }
 
     public bool IsTest(QCStatsModel stats)
