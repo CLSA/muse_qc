@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS  museqc.`collection` (
   `basicInfoAddedDateTime` datetime DEFAULT NULL,
   `outputsAddedDateTime` datetime DEFAULT NULL,
   `jpgPath` varchar(128) DEFAULT NULL,
-  `isRealDay` tinyint DEFAULT NULL,
+  `isTest` tinyint DEFAULT NULL,
   `hasDurationProblem` tinyint DEFAULT NULL,
   `hasQualityProblem` tinyint DEFAULT NULL,
   `museQualityVersion` int UNSIGNED DEFAULT NULL,

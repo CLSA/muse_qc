@@ -8,14 +8,14 @@ namespace MuseQCApp.Interfaces;
 public interface IMuseQualityDecisions
 {
     /// <summary>
-    /// Determines if the day is an actual day of data.
+    /// Determines if the data is from a test run
     /// NOTE: Sometimes tests are done for small amounts of time to ensure 
     /// everything is working with the Muse headband. These tests should not 
     /// be counted as an actual night of data
     /// </summary>
     /// <param name="stats">The QC stats to evaluate</param>
-    /// <returns>True if this is an actual night of data, false otherwise</returns>
-    public bool IsActualNight(QCStatsModel stats);
+    /// <returns>True if this is a test, false otherwise</returns>
+    public bool IsTest(QCStatsModel stats);
 
     /// <summary>
     /// 

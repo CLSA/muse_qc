@@ -34,7 +34,7 @@ public class CollectionData
         _db.SaveData<dynamic>("insert_collectionBasicInfo", new { WID, StartDT, TimeOffset, PodSerial, UploadDT});
 
     public Task InsertQualityOutputs(string WID, DateTime StartDT, string PodSerial,
-        QCStatsModel qc, string JpgPath, bool RealData, bool DurProb, bool QualityProb, int QualityVersion
+        QCStatsModel qc, string JpgPath, bool IsTest, bool DurProb, bool QualityProb, int QualityVersion
         ) =>
         _db.SaveData<dynamic>("insert_qualityOutputs", new { 
             WID, StartDT, PodSerial,
@@ -42,7 +42,7 @@ public class CollectionData
             qc.Ch12, qc.Ch13, qc.Ch43, qc.Ch42,
             qc.FAny, qc.FBoth, qc.TAny, qc.TBoth,
             qc.FtAny, qc.EegAny, qc.EegAll,
-            JpgPath, RealData, DurProb, QualityProb,
+            JpgPath, IsTest, DurProb, QualityProb,
             QualityVersion
         });
 }

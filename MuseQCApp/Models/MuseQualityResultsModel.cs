@@ -8,7 +8,7 @@ public class MuseQualityResultsModel
     public string WestonId { get; init; }
     public string PodSerial { get; init; }
     public DateTime StartDate { get; init; }
-    public bool RealData { get; init; }
+    public bool IsTest { get; init; }
     public bool DurProblem { get; init; }
     public bool QualityProblem { get; init; }
     public int MuseQualityVersion { get; init; }
@@ -16,14 +16,14 @@ public class MuseQualityResultsModel
 
 
     public MuseQualityResultsModel(QCStatsModel qc, string filename, string westonID, string podSerial, 
-        DateTime start, bool real, bool durProblem, bool qualityProblem, int museQualityVersion, string newJpgPath)
+        DateTime start, bool isTest, bool durProblem, bool qualityProblem, int museQualityVersion, string newJpgPath)
     {
         QcStats = qc;
         FileName = filename;
         WestonId = westonID;
         PodSerial = podSerial;
         StartDate = start;
-        RealData = real;
+        IsTest = isTest;
         DurProblem = durProblem;
         QualityProblem = qualityProblem;
         MuseQualityVersion = museQualityVersion;

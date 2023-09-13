@@ -201,7 +201,7 @@ CREATE PROCEDURE `insert_qualityOutputs` (
     IN Ch12 DOUBLE, IN Ch13 DOUBLE, IN Ch43 DOUBLE, IN Ch42 DOUBLE,
     IN FAny DOUBLE, IN FBoth DOUBLE, IN TAny DOUBLE, IN TBoth DOUBLE,
     IN FtAny DOUBLE, IN EegAny DOUBLE, IN EegAll DOUBLE,
-	IN JpgPath VARCHAR(128), IN RealData BOOLEAN, 
+	IN JpgPath VARCHAR(128), IN IsTest BOOLEAN, 
     IN DurProb BOOLEAN, IN QualityProb BOOLEAN, IN QualityVersion INT
 )
 BEGIN
@@ -211,7 +211,7 @@ SET cid = (SELECT collectionID FROM collection WHERE westonID = WID AND startDat
 UPDATE collection
 SET 
 jpgPath = JpgPath, 
-isRealDay = RealData, 
+isTest = IsTest, 
 hasDurationProblem = DurProb, 
 hasQualityProblem = QualityProb, 
 outputsAddedDateTime = NOW(), 

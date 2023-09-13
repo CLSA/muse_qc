@@ -256,7 +256,7 @@ public class App
         }
 
         // Interpret the results
-        bool realData = MuseQuality.IsActualNight(qcStats);
+        bool isTest = MuseQuality.IsTest(qcStats);
         bool durProblem = MuseQuality.HasDurationProblem(qcStats);
         bool qualityProblem = MuseQuality.HasQualityProblem(qcStats);
 
@@ -264,7 +264,7 @@ public class App
         string newJpgPath = Path.Combine(jpgDirPath, Path.GetFileName(outputPaths.JpgPath));
         File.Move(outputPaths.JpgPath, newJpgPath);
 
-        return new MuseQualityResultsModel(qcStats, fileName, westonId, podSerial, startDate.Value, realData, durProblem, qualityProblem, MuseQuality.GetVersionNumber(), newJpgPath);
+        return new MuseQualityResultsModel(qcStats, fileName, westonId, podSerial, startDate.Value, isTest, durProblem, qualityProblem, MuseQuality.GetVersionNumber(), newJpgPath);
     }
 
     /// <summary>
