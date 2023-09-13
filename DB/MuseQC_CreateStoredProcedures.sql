@@ -1,14 +1,14 @@
 -- ------------------------------------------
 -- procedure insert_participant
 -- ------------------------------------------
-USE `museqc`;
+USE `museqcapp`;
 DROP procedure IF EXISTS `insert_participant`;
 
 DELIMITER $$
-USE `museqc`$$
+USE `museqcapp`$$
 CREATE PROCEDURE `insert_participant` (IN WID CHAR(10), IN PSite CHAR(3))
 BEGIN
-INSERT INTO museqc.participants VALUES (WID, PSite);
+INSERT INTO museqcapp.participants VALUES (WID, PSite);
 END$$
 
 DELIMITER ;
@@ -16,14 +16,14 @@ DELIMITER ;
 -- ------------------------------------------
 -- procedure insert_westonID
 -- ------------------------------------------
-USE `museqc`;
+USE `museqcapp`;
 DROP procedure IF EXISTS `insert_westonID`;
 
 DELIMITER $$
-USE `museqc`$$
+USE `museqcapp`$$
 CREATE PROCEDURE `insert_westonID` (IN WID CHAR(10))
 BEGIN
-INSERT INTO museqc.participants (westonID) VALUES (WID);
+INSERT INTO museqcapp.participants (westonID) VALUES (WID);
 END$$
 
 DELIMITER ;
@@ -31,14 +31,14 @@ DELIMITER ;
 -- ------------------------------------------
 -- procedure westonID_exists
 -- ------------------------------------------
-USE `museqc`;
+USE `museqcapp`;
 DROP procedure IF EXISTS `westonID_exists`;
 
 DELIMITER $$
-USE `museqc`$$
+USE `museqcapp`$$
 CREATE PROCEDURE `westonID_exists` (IN WID CHAR(10))
 BEGIN
-SELECT EXISTS(SELECT * FROM museqc.participants WHERE westonID = WID);
+SELECT EXISTS(SELECT * FROM museqcapp.participants WHERE westonID = WID);
 END$$
 
 DELIMITER ;
@@ -46,15 +46,15 @@ DELIMITER ;
 -- ------------------------------------------
 -- procedure get_participantSite
 -- ------------------------------------------
-USE `museqc`;
+USE `museqcapp`;
 DROP procedure IF EXISTS `get_participantSite`;
 
 DELIMITER $$
-USE `museqc`$$
+USE `museqcapp`$$
 CREATE PROCEDURE `get_participantSite` (IN WID CHAR(10))
 BEGIN
 SELECT site 
-FROM museqc.participants
+FROM museqcapp.participants
 WHERE westonID = WID;
 END$$
 
@@ -63,14 +63,14 @@ DELIMITER ;
 -- ------------------------------------------
 -- procedure update_site
 -- ------------------------------------------
-USE `museqc`;
+USE `museqcapp`;
 DROP procedure IF EXISTS `update_site`;
 
 DELIMITER $$
-USE `museqc`$$
+USE `museqcapp`$$
 CREATE PROCEDURE `update_site` (IN WID CHAR(10), IN PSite CHAR(3))
 BEGIN
-UPDATE museqc.participants
+UPDATE museqcapp.participants
 SET site = PSite
 WHERE westonID = WID;
 END$$
@@ -80,15 +80,15 @@ DELIMITER ;
 -- ------------------------------------------
 -- procedure insert_collectionBasicInfo
 -- ------------------------------------------
-USE `museqc`;
+USE `museqcapp`;
 DROP procedure IF EXISTS `insert_collectionBasicInfo`;
 
 DELIMITER $$
-USE `museqc`$$
+USE `museqcapp`$$
 CREATE PROCEDURE `insert_collectionBasicInfo` (IN WID CHAR(10), IN StartDT DATETIME,
 	IN TimeOffset float, IN PodSerial CHAR(14), IN UploadDT DATETIME)
 BEGIN
-INSERT INTO museqc.collection (westonID, startDateTime, timeZoneOffset, podID, uploadDateTime, basicInfoAddedDateTime) 
+INSERT INTO museqcapp.collection (westonID, startDateTime, timeZoneOffset, podID, uploadDateTime, basicInfoAddedDateTime) 
 VALUES (WID, StartDT, TimeOffset, PodSerial, UploadDT, NOW());
 END$$
 
@@ -97,16 +97,16 @@ DELIMITER ;
 -- ------------------------------------------
 -- procedure collectionBasicInfo_exists
 -- ------------------------------------------
-USE `museqc`;
+USE `museqcapp`;
 DROP procedure IF EXISTS `collectionBasicInfo_exists`;
 
 DELIMITER $$
-USE `museqc`$$
+USE `museqcapp`$$
 CREATE PROCEDURE `collectionBasicInfo_exists` (IN WID CHAR(10), IN StartDT DATETIME, IN PodSerial CHAR(14))
 BEGIN
 SELECT EXISTS(
 	SELECT *
-	FROM museqc.collection 
+	FROM museqcapp.collection 
 	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial
 );
 END$$
@@ -116,14 +116,14 @@ DELIMITER ;
 -- ------------------------------------------
 -- procedure update_edfPath
 -- ------------------------------------------
-USE `museqc`;
+USE `museqcapp`;
 DROP procedure IF EXISTS `update_edfPath`;
 
 DELIMITER $$
-USE `museqc`$$
+USE `museqcapp`$$
 CREATE PROCEDURE `update_edfPath` (IN WID CHAR(10), IN StartDT DATETIME, IN PodSerial CHAR(14), IN edfFullPath VARCHAR(128))
 BEGIN
-UPDATE museqc.collection
+UPDATE museqcapp.collection
 SET edfPath = edfFullPath
 WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial;
 END$$
@@ -133,16 +133,16 @@ DELIMITER ;
 -- ------------------------------------------
 -- procedure edf_exists
 -- ------------------------------------------
-USE `museqc`;
+USE `museqcapp`;
 DROP procedure IF EXISTS `edf_exists`;
 
 DELIMITER $$
-USE `museqc`$$
+USE `museqcapp`$$
 CREATE PROCEDURE `edf_exists` (IN WID CHAR(10), IN StartDT DATETIME, IN PodSerial CHAR(14))
 BEGIN
 SELECT EXISTS(
 	SELECT *
-	FROM museqc.collection 
+	FROM museqcapp.collection 
 	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial AND edfPath IS NOT NULL AND edfPath != ""
 );
 END$$
@@ -152,16 +152,16 @@ DELIMITER ;
 -- ------------------------------------------
 -- procedure get_unprocessed_edfPaths
 -- ------------------------------------------
-USE `museqc`;
+USE `museqcapp`;
 DROP procedure IF EXISTS `get_unprocessed_edfPaths`;
 
 DELIMITER $$
-USE `museqc`$$
+USE `museqcapp`$$
 CREATE PROCEDURE `get_unprocessed_edfPaths` ()
 BEGIN
 
 SELECT edfPath
-FROM museqc.collection 
+FROM museqcapp.collection 
 WHERE outputsAddedDateTime IS NULL AND edfPath IS NOT Null AND edfPath != "";
 
 END$$
@@ -171,16 +171,16 @@ DELIMITER ;
 -- ------------------------------------------
 -- procedure jpg_exists
 -- ------------------------------------------
-USE `museqc`;
+USE `museqcapp`;
 DROP procedure IF EXISTS `jpg_exists`;
 
 DELIMITER $$
-USE `museqc`$$
+USE `museqcapp`$$
 CREATE PROCEDURE `jpg_exists` (IN WID CHAR(10), IN StartDT DATETIME, IN PodSerial CHAR(14))
 BEGIN
 SELECT EXISTS(
 	SELECT *
-	FROM museqc.collection 
+	FROM museqcapp.collection 
 	WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial AND jpgPath IS NOT NULL AND jpgPath != ""
 );
 END$$
@@ -190,11 +190,11 @@ DELIMITER ;
 -- ------------------------------------------
 -- procedure insert_qualityOutputs
 -- ------------------------------------------
-USE `museqc`;
+USE `museqcapp`;
 DROP procedure IF EXISTS `insert_qualityOutputs`;
 
 DELIMITER $$
-USE `museqc`$$
+USE `museqcapp`$$
 CREATE PROCEDURE `insert_qualityOutputs` (
 	IN WID CHAR(10), IN StartDT DATETIME, IN PodSerial CHAR(14), 
 	IN Dur DOUBLE, IN Ch1 DOUBLE, IN Ch2 DOUBLE, IN Ch3 DOUBLE, IN Ch4 DOUBLE,
@@ -208,7 +208,7 @@ BEGIN
 DECLARE cid INT unsigned;  
 SET cid = (SELECT collectionID FROM collection WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial);
 
-UPDATE collection
+UPDATE museqcapp.collection
 SET 
 jpgPath = JpgPath, 
 isTest = IsTest, 
@@ -218,7 +218,7 @@ outputsAddedDateTime = NOW(),
 museQualityVersion = QualityVersion
 WHERE collectionID = cid; 
 
-INSERT INTO museqc.qcstats (collectionID, duration, eegch1, eegch2, eegch3, eegch4, 
+INSERT INTO museqcapp.qcstats (collectionID, duration, eegch1, eegch2, eegch3, eegch4, 
 	eeg_ch1_eeg_ch2, eeg_ch1_eeg_ch3, eeg_ch4_eeg_ch3, eeg_ch4_eeg_ch2, 
     fany, fboth, tany, tboth, ftany, eegany, eegall) 
 VALUES (cid, Dur, Ch1, Ch2, Ch3, Ch4, Ch12, Ch13, Ch43, Ch42, 
@@ -231,18 +231,18 @@ DELIMITER ;
 -- ------------------------------------------
 -- procedure get_lastDateTimeDownloaded
 -- ------------------------------------------
-USE `museqc`;
+USE `museqcapp`;
 DROP procedure IF EXISTS `get_lastDateTimeDownloaded`;
 
 DELIMITER $$
-USE `museqc`$$
+USE `museqcapp`$$
 CREATE PROCEDURE `get_lastDateTimeDownloaded` ()
 BEGIN
 
 SELECT IF(
-	(SELECT count(collectionID) FROM museqc.collection WHERE outputsAddedDateTime IS NULL AND edfPath IS NULL) > 0,
-	(SELECT MIN(uploadDateTime) FROM museqc.collection WHERE outputsAddedDateTime IS NULL AND edfPath IS NULL),
-	(SELECT MAX(uploadDateTime) FROM museqc.collection)
+	(SELECT count(collectionID) FROM museqcapp.collection WHERE outputsAddedDateTime IS NULL AND edfPath IS NULL) > 0,
+	(SELECT MIN(uploadDateTime) FROM museqcapp.collection WHERE outputsAddedDateTime IS NULL AND edfPath IS NULL),
+	(SELECT MAX(uploadDateTime) FROM museqcapp.collection)
 );
 
 END$$

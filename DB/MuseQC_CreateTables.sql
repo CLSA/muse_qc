@@ -1,12 +1,12 @@
-CREATE SCHEMA `museqc` ;
+CREATE SCHEMA `museqcapp` ;
 
-CREATE TABLE IF NOT EXISTS museqc.`participants` (
+CREATE TABLE IF NOT EXISTS museqcapp.`participants` (
   `westonID` char(10) NOT NULL,
   `site` char(3) DEFAULT NULL,
   PRIMARY KEY (`westonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS  museqc.`collection` (
+CREATE TABLE IF NOT EXISTS  museqcapp.`collection` (
   `collectionID` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `westonID` char(10) NOT NULL,
   `startDateTime` datetime NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS  museqc.`collection` (
   CONSTRAINT `WestonID_FK` FOREIGN KEY (`westonID`) REFERENCES `participants` (`westonID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS  museqc.`qcstats` (
+CREATE TABLE IF NOT EXISTS  museqcapp.`qcstats` (
   `qcid` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `collectionID` int UNSIGNED NOT NULL,
   `duration` double NOT NULL,
