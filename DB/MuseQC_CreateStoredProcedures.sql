@@ -162,7 +162,7 @@ BEGIN
 
 SELECT edfPath
 FROM museqcapp.collection 
-WHERE outputsAddedDateTime IS NULL AND edfPath IS NOT Null AND edfPath != "" AND processingProblem <> 1;
+WHERE outputsAddedDateTime IS NULL AND edfPath IS NOT Null AND edfPath != "" AND processingProblem IS NULL;
 
 END$$
 
