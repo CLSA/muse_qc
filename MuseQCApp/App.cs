@@ -87,24 +87,34 @@ public class App
         // Get list of files on google bucket
         List<GBDownloadInfoModel> pathsOnBucket = Bucket.GetFilePaths();
 
+        // Select all files that need to be downloaded
+        List<GBDownloadInfoModel> pathsToDownload = DecideFilesToDownload(pathsOnBucket);
+
+        // set numFilesToDownload to the number of avaialble files if:
+        // 1. a value was not provided for maxFilesToDownload
+        // 2. the value provided for maxFilesToDownload is higher than the number of available files
+        // Otherwise download and process a number of files equal to maxFilesToDownload
+        int totalNumFilesToDownload = ((pathsToDownload.Count < maxFilesToDownload) || (maxFilesToDownload == -1)) 
+            ? pathsToDownload.Count : maxFilesToDownload;
+
         int filesDownloaded = 0;
-        while( filesDownloaded < maxFilesToDownload)
+        while ( filesDownloaded < totalNumFilesToDownload)
         {
             // decide how many files to download this loop execution
             // while ensuring the max total number is not exceeded
-            int filesLeftToDownload = (maxFilesToDownload - filesDownloaded);
-            int numFilesToDownload = filesLeftToDownload > maxFilesToDownloadAtOnce 
+            int filesLeftToDownload = totalNumFilesToDownload - filesDownloaded;
+            int numFilesToDownloadThisExecution = filesLeftToDownload > maxFilesToDownloadAtOnce
                 ? maxFilesToDownloadAtOnce : filesLeftToDownload;
             
             // Download files that have not had quality checks run
             // and are not currently downloaded
-            DownloadFiles(pathsOnBucket, numFilesToDownload);
+            DownloadFiles(pathsOnBucket, numFilesToDownloadThisExecution);
 
             // Run quality checks
             RunQualityChecks();
 
             // increment the number of files that have been downloaded
-            filesDownloaded+= numFilesToDownload;
+            filesDownloaded+= numFilesToDownloadThisExecution;
         }
         
 
@@ -123,20 +133,17 @@ public class App
     /// </summary>
     /// <param name="pathsOnBucket">The paths to all files that exist in the google bucket</param>
     /// <param name="maxFilesToDownload">The maximum number of files that should be downloaded</param>
-    private void DownloadFiles(List<GBDownloadInfoModel> pathsOnBucket, int maxFilesToDownload = 10)
+    private void DownloadFiles(List<GBDownloadInfoModel> pathsToDownload, int maxFilesToDownload = 10)
     {
-        // Select all files that need to be downloaded
-        List<GBDownloadInfoModel> pathsToDownload = DecideFilesToDownload(pathsOnBucket);
-
         // Reduce the amount of files to download to a max specified amount
-        pathsToDownload = SelectXFiles(pathsToDownload, maxFilesToDownload); pathsToDownload = SelectXFiles(pathsToDownload, maxFilesToDownload);
+        List<GBDownloadInfoModel> selectedPathsToDownload = SelectXFiles(pathsToDownload, maxFilesToDownload); 
         
         // Download files and update DB with paths
         string? edfStorageFolderPath = ConfigHelper.GetEdfStorageFolderPath();
         if (string.IsNullOrEmpty(edfStorageFolderPath) == false)
         {
-            List<GBDownloadInfoModel> filesDownloadedSuccessfully = Bucket.DownloadFiles(pathsToDownload, edfStorageFolderPath);
-            DbMethods.UpdateDbWithDownloadedFilePaths(filesDownloadedSuccessfully, edfStorageFolderPath);
+            List<GBDownloadInfoModel> filesDownloadedSuccessfully = Bucket.DownloadFiles(selectedPathsToDownload, edfStorageFolderPath);
+            DbMethods.UpdateDbWithDownloadedFilePaths(filesDownloadedSuccessfully, edfStorageFolderPath); 
         }
         else
         {
@@ -222,12 +229,12 @@ public class App
     {
         files = files.OrderBy(x => x.UploadDateTime).ToList();
         int maxINt = numToSelect < files.Count ? numToSelect : files.Count;
-        List<GBDownloadInfoModel> smallerPathsToDownload = new();
+        List<GBDownloadInfoModel> selectedPathsToDownload = new();
         for (int i = 0; i < maxINt; i++)
         {
-            smallerPathsToDownload.Add(files[i]);
+            selectedPathsToDownload.Add(files[i]);
         }
-        return smallerPathsToDownload;
+        return selectedPathsToDownload;
     }
 
     /// <summary>
