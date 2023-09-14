@@ -30,6 +30,9 @@ public class CollectionData
     public Task UpdateEdfPath(string WID, DateTime StartDT, string PodSerial, string edfFullPath) =>
         _db.SaveData<dynamic>("update_edfPath", new { WID, StartDT, PodSerial, edfFullPath});
 
+    public Task UpdateProblemProcessing(string WID, DateTime StartDT, string PodSerial, bool Problem) =>
+        _db.SaveData<dynamic>("update_problemProcessing", new { WID, StartDT, PodSerial, Problem});
+
     public Task InsertBasicInfo(string WID, DateTime StartDT, float TimeOffset, string PodSerial, DateTime UploadDT) =>
         _db.SaveData<dynamic>("insert_collectionBasicInfo", new { WID, StartDT, TimeOffset, PodSerial, UploadDT});
 

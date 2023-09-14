@@ -95,6 +95,37 @@ public class ConfigHelper
     }
 
     /// <summary>
+    /// Get the full path to the sub folder where edf files downloaded from the google bucket
+    /// that could not be processed should be stored
+    /// </summary>
+    /// <returns>The full path</returns>
+    public string? GetEdfProblemStorageSubFolderPath()
+    {
+        string? problemSubFolderName = GetStringFromConfig("EdfProblemStorageSubFolderName");
+        if (problemSubFolderName is null)
+        {
+            Logging.LogWarning("Null edf problem storage sub directory returned from config");
+            return null;
+        }
+
+        string? edfStorageFolder = GetEdfStorageFolderPath();
+        if(edfStorageFolder is null)
+        {
+            return null;
+        }
+
+        string? edfProblemStorageFolder = Path.Combine(edfStorageFolder, problemSubFolderName);
+
+        // ensure the edf storage folder is created
+        if (Directory.Exists(edfProblemStorageFolder) == false)
+        {
+            Logging.LogWarning($"Creating edf problem storage directory at {edfProblemStorageFolder}");
+            Directory.CreateDirectory(edfProblemStorageFolder);
+        }
+        return edfProblemStorageFolder;
+    }
+
+    /// <summary>
     /// Get the full path to the folder where output files should be stored 
     /// after running the muse quality script
     /// </summary>

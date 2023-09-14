@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS  museqcapp.`collection` (
   `podID` char(14) NOT NULL,
   `uploadDateTime` datetime NOT NULL,
   `edfPath` varchar(128) DEFAULT NULL,
+  `processingProblem` tinyint DEFAULT NULL,
   `basicInfoAddedDateTime` datetime DEFAULT NULL,
   `outputsAddedDateTime` datetime DEFAULT NULL,
   `jpgPath` varchar(128) DEFAULT NULL,

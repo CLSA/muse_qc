@@ -51,7 +51,7 @@ public class DbHelpers
     {
         // Update db with jpg path and data (qc stats, filename inferred data, and interpreted results)
         Db.Collection.InsertQualityOutputs(results.WestonId, results.StartDate, results.PodSerial,
-            results.QcStats, results.NewJpgPath, results.IsTest, results.DurProblem, results.QualityProblem, results.MuseQualityVersion);
+            results.QcStats, results.NewJpgPath, results.IsTest, results.DurProblem, results.QualityProblem, results.MuseQualityVersion).Wait();
 
         // Remove edf path from db
         bool edfExists = Db.Collection.EdfExists(results.WestonId, results.StartDate, results.PodSerial).Result.First();
@@ -124,6 +124,16 @@ public class DbHelpers
     public IEnumerable<string> GetEdfFilesThatNeedQualityChecks()
     {
         return Db.Collection.GetUnprocessedEdfPaths().Result;
+    }
+
+    /// <summary>
+    /// Update the edf path and problem processing parameters when an edf file fails processing
+    /// </summary>
+    /// <param name="updatedEdfPath">The new edf path</param>
+    public void UpdateEdfFailedProcessing(string westonID, string podSerial, DateTime startDate, string updatedEdfPath)
+    {
+        Db.Collection.UpdateEdfPath(westonID, startDate, podSerial, updatedEdfPath).Wait();
+        Db.Collection.UpdateProblemProcessing(westonID, startDate, podSerial, true).Wait();
     }
 
     #endregion

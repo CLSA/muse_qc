@@ -162,7 +162,7 @@ BEGIN
 
 SELECT edfPath
 FROM museqcapp.collection 
-WHERE outputsAddedDateTime IS NULL AND edfPath IS NOT Null AND edfPath != "";
+WHERE outputsAddedDateTime IS NULL AND edfPath IS NOT Null AND edfPath != "" AND processingProblem <> 1;
 
 END$$
 
@@ -215,7 +215,8 @@ isTest = IsTest,
 hasDurationProblem = DurProb, 
 hasQualityProblem = QualityProb, 
 outputsAddedDateTime = NOW(), 
-museQualityVersion = QualityVersion
+museQualityVersion = QualityVersion,
+processingProblem = 0
 WHERE collectionID = cid; 
 
 INSERT INTO museqcapp.qcstats (collectionID, duration, eegch1, eegch2, eegch3, eegch4, 
@@ -245,6 +246,23 @@ SELECT IF(
 	(SELECT MAX(uploadDateTime) FROM museqcapp.collection)
 );
 
+END$$
+
+DELIMITER ;
+
+-- ------------------------------------------
+-- procedure update_problemProcessing
+-- ------------------------------------------
+USE `museqcapp`;
+DROP procedure IF EXISTS `update_problemProcessing`;
+
+DELIMITER $$
+USE `museqcapp`$$
+CREATE PROCEDURE `update_problemProcessing` (IN WID CHAR(10), IN StartDT DATETIME, IN PodSerial CHAR(14), IN Problem tinyint)
+BEGIN
+UPDATE museqcapp.collection
+SET processingProblem = Problem
+WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial;
 END$$
 
 DELIMITER ;

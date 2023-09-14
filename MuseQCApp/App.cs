@@ -180,6 +180,7 @@ public class App
                 || File.Exists(outputPaths.CsvPath) == false || File.Exists(outputPaths.EdfPath) == false)
             {
                 Logging.LogError($"Not all output files were created by the quality script for input file: {edf}");
+                UpdateEdfThatFailedProcessing(edf);
                 continue;
             }
 
@@ -313,6 +314,42 @@ public class App
             }
         }
         return filesToDownload;
+    }
+
+    /// <summary>
+    /// Makes the appropriate updates required for any edf file that fails processing
+    /// 1. Moves the file to a new sub folder for files that failed processing 
+    ///     NOTE: Assumes the old edf path is stored in the db
+    /// 2. Updates the DB with the new path
+    /// 3. updates DB to set processing problem flag
+    /// </summary>
+    /// <param name="edfPath">The path to where the edf file is located</param>
+    private void UpdateEdfThatFailedProcessing(string edfPath)
+    {
+        string fileName = Path.GetFileNameWithoutExtension(edfPath);
+        string? westonId = MuseGBFileName.GetWestonID(fileName);
+        string? podSerial = MuseGBFileName.GetPodID(fileName);
+        DateTime? startDate = MuseGBFileName.GetStartDateTime(fileName);
+
+        if(westonId is null || podSerial is null || startDate is null)
+        {
+            Logging.LogError($"Could not obtain one or more of the following, WestonID, Pod serial number or start date from path: {edfPath}");
+            return;
+        }
+
+        string? edfproblemDir = ConfigHelper.GetEdfProblemStorageSubFolderPath();
+        if (edfproblemDir is null)
+        {
+            return;
+        }
+
+        string updatedEdfPath = Path.Combine(edfproblemDir, $"{fileName}.edf");
+
+        // Move file to folder specific for files with problems
+        File.Move(edfPath, updatedEdfPath);
+
+        DbMethods.UpdateEdfFailedProcessing(westonId, podSerial, startDate.Value, updatedEdfPath);
+        Logging.LogInformation($"Updated db with processing problem and new path. Old path: {edfPath} New path: {updatedEdfPath}");
     }
 
     #endregion
