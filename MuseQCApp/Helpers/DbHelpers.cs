@@ -58,7 +58,7 @@ public class DbHelpers
         string deviceInfoStr = $"Weston ID: {results.WestonId} Pod Serial: {results.PodSerial} Start Date: {results.StartDate}";
         if (edfExists)
         {
-            Db.Collection.UpdateEdfPath(results.WestonId, results.StartDate, results.PodSerial, "");
+            Db.Collection.UpdateEdfPath(results.WestonId, results.StartDate, results.PodSerial, "").Wait();
             Logging.LogInformation($"Removed Edf file path from db for a collection with the following details. {deviceInfoStr}");
         }
         else

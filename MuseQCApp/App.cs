@@ -108,7 +108,7 @@ public class App
             
             // Download files that have not had quality checks run
             // and are not currently downloaded
-            DownloadFiles(pathsOnBucket, numFilesToDownloadThisExecution);
+            DownloadFiles(pathsToDownload, numFilesToDownloadThisExecution);
 
             // Run quality checks
             RunQualityChecks();
@@ -143,6 +143,10 @@ public class App
         if (string.IsNullOrEmpty(edfStorageFolderPath) == false)
         {
             List<GBDownloadInfoModel> filesDownloadedSuccessfully = Bucket.DownloadFiles(selectedPathsToDownload, edfStorageFolderPath);
+            foreach(GBDownloadInfoModel fileDownloaded in filesDownloadedSuccessfully)
+            {
+                pathsToDownload.Remove(fileDownloaded);
+            }
             DbMethods.UpdateDbWithDownloadedFilePaths(filesDownloadedSuccessfully, edfStorageFolderPath); 
         }
         else
@@ -170,6 +174,8 @@ public class App
 
         // Determine files that need to have quality checks run
         IEnumerable<string> edfFiles = DbMethods.GetEdfFilesThatNeedQualityChecks();
+
+        Logging.LogInformation($"Found {edfFiles.Count()} files that need quality checks run");
 
         // Run quality checks
         foreach (string edf in edfFiles)
@@ -212,7 +218,7 @@ public class App
             DateTime endTime = DateTime.Now;
             Logging.LogInformation($"Completed: {edf} at {endTime}. Duration: {endTime-startTime}");
             
-            // Delete uneeded files
+            // Delete unneeded files
             File.Delete(outputPaths.CsvPath);
             File.Delete(outputPaths.EdfPath);
             File.Delete(edf);
