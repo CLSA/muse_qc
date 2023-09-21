@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MuseQCApp.Models;
 using MuseQCDBAccess.Data;
+using MuseQCDBAccess.Models;
 
 namespace MuseQCApp.Helpers;
 public class DbHelpers
@@ -134,6 +135,11 @@ public class DbHelpers
     {
         Db.Collection.UpdateEdfPath(westonID, startDate, podSerial, updatedEdfPath).Wait();
         Db.Collection.UpdateProblemProcessing(westonID, startDate, podSerial, true).Wait();
+    }
+
+    public List<CollectionDataPrimaryKeyModel> GetProcessedEdfList()
+    {
+        return Db.Collection.GetProcessedEdfList().Result.ToList();
     }
 
     #endregion

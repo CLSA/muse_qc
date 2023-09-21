@@ -27,6 +27,9 @@ public class CollectionData
     public Task<IEnumerable<string>> GetUnprocessedEdfPaths() =>
         _db.LoadData<string, dynamic>("get_unprocessed_edfPaths", new {});
 
+    public Task<IEnumerable<CollectionDataPrimaryKeyModel>> GetProcessedEdfList() =>
+        _db.LoadData<CollectionDataPrimaryKeyModel, dynamic>("get_processedEdfFileList", new { });
+
     public Task UpdateEdfPath(string WID, DateTime StartDT, string PodSerial, string edfFullPath) =>
         _db.SaveData<dynamic>("update_edfPath", new { WID, StartDT, PodSerial, edfFullPath});
 

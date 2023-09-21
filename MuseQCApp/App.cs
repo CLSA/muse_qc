@@ -90,7 +90,7 @@ public class App
         // Select all files that need to be downloaded
         List<GBDownloadInfoModel> pathsToDownload = DecideFilesToDownload(pathsOnBucket);
 
-        // set numFilesToDownload to the number of avaialble files if:
+        // set numFilesToDownload to the number of available files if:
         // 1. a value was not provided for maxFilesToDownload
         // 2. the value provided for maxFilesToDownload is higher than the number of available files
         // Otherwise download and process a number of files equal to maxFilesToDownload
@@ -282,14 +282,14 @@ public class App
     }
 
     /// <summary>
-    /// Creates a list of the files that are not currently downloaded that need to have anlysis run
+    /// Creates a list of the files that are not currently downloaded that need to have analysis run
     /// </summary>
     /// <param name="downloadableFiles">A list of information on all edf files that exist in the google bucket</param>
-    /// <returns>A list of the files that are not currently downloaded that need to have anlysis run</returns>
+    /// <returns>A list of the files that are not currently downloaded that need to have analysis run</returns>
     public List<GBDownloadInfoModel> DecideFilesToDownload(List<GBDownloadInfoModel> downloadableFiles)
     {
-        // Get the upload date time of the last file downloaded
-        DateTime? lastTimeDownloaded = DbMethods.GetUploadDTLastFileDownloaded();
+        // Get the info for all of the previously processed files
+        var processedFileList = DbMethods.GetProcessedEdfList();
 
         // Check each file that can be downloaded and select those that need to be downloaded
         List<GBDownloadInfoModel> filesToDownload = new();
@@ -299,19 +299,14 @@ public class App
             {
                 // Ignore if:
                 // 1. Missing information
-                // 2. The upload date is earlier then the last file downloaad
-                // 3. The id is not a ww id
+                // 2. The id is not a ww id
+                // 3. The file size is less than 1mb
+                // 4. The file was previously processed
                 if (gbInfo.NoNullValues == false
-                    || lastTimeDownloaded != null && gbInfo.UploadDateTime.CompareTo(lastTimeDownloaded) < 0
-                    || gbInfo.WestonID.ToLower().StartsWith("ww") == false)
+                    || gbInfo.WestonID.ToLower().StartsWith("ww") == false
+                    || gbInfo.LessThan1mb
+                    || ProcessedAlready(gbInfo, processedFileList))
                 {
-                    continue;
-                }
-
-                // Skip if file is less than 1 megabyte
-                if (gbInfo.LessThan1mb)
-                {
-                    Logging.LogTrace($"File size too low. Not being added to files to download. size: {gbInfo.Size} {gbInfo.SizeUnits} path: {gbInfo.FullFilePath}");
                     continue;
                 }
 
@@ -326,7 +321,28 @@ public class App
                 Logging.LogError($"Error while evaluating {gbInfo.FileNameWithExtension}. Msg: {ex.Message}");
             }
         }
-        return filesToDownload;
+         return filesToDownload;
+    }
+
+    /// <summary>
+    /// Checks if a file has been processed already
+    /// </summary>
+    /// <param name="gbInfo">The info to check against the list</param>
+    /// <param name="processedFileList">A list of all the files that have had data processed and stored in the DB</param>
+    /// <returns>True if the file</returns>
+    private bool ProcessedAlready(GBDownloadInfoModel gbInfo, List<CollectionDataPrimaryKeyModel> processedFileList)
+    {
+        foreach (CollectionDataPrimaryKeyModel processedFile in processedFileList)
+        {
+            if (gbInfo.NoNullValues 
+                && gbInfo.WestonID.Equals(processedFile.westonID)
+                && gbInfo.PodID.Equals(processedFile.podID)
+                && gbInfo.CollectionDateTime.Equals(processedFile.startDateTime))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>

@@ -265,4 +265,19 @@ SET processingProblem = Problem
 WHERE westonID = WID AND startDateTime = StartDT AND podID = PodSerial;
 END$$
 
+-- ------------------------------------------
+-- procedure get_processedEdfFileList
+-- ------------------------------------------
+USE `museqcapp`;
+DROP procedure IF EXISTS `get_processedEdfList`;
+
+DELIMITER $$
+USE `museqcapp`$$
+CREATE PROCEDURE `get_processedEdfFileList` ()
+BEGIN
+SELECT c.westonID, c.podID, c.startDateTime
+FROM museqcapp.collection as c
+WHERE processingProblem IS NOT NULL;
+END$$
+
 DELIMITER ;
