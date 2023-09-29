@@ -332,14 +332,17 @@ public class App
     /// <returns>True if the file</returns>
     private bool ProcessedAlready(GBDownloadInfoModel gbInfo, List<CollectionDataPrimaryKeyModel> processedFileList)
     {
-        foreach (CollectionDataPrimaryKeyModel processedFile in processedFileList)
+        if(gbInfo.NoNullValues)
         {
-            if (gbInfo.NoNullValues 
-                && gbInfo.WestonID.Equals(processedFile.westonID)
-                && gbInfo.PodID.Equals(processedFile.podID)
-                && gbInfo.CollectionDateTime.Equals(processedFile.startDateTime))
+            string westonID = gbInfo.WestonID.ToLower();
+            foreach (CollectionDataPrimaryKeyModel processedFile in processedFileList)
             {
-                return true;
+                if (westonID.Equals(processedFile.westonID.ToLower())
+                    && gbInfo.PodID.Equals(processedFile.podID)
+                    && gbInfo.CollectionDateTime.Equals(processedFile.startDateTime))
+                {
+                    return true;
+                }
             }
         }
         return false;
