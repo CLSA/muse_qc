@@ -94,7 +94,7 @@ public static class SiteLookupTable
     /// <summary>
     /// The long form from the site lookup table for the Sherbrooke DCS
     /// </summary>
-    private const string SherbrookeLong = "Sherbrooke";
+    private const string SherbrookeLong = "Sherbrooke DCS";
 
     /// <summary>
     /// The 3 char short form for the Simon Fraser DCS
