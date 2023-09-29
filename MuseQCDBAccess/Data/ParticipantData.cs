@@ -1,4 +1,5 @@
 ﻿using MuseQCDBAccess.DbAccess;
+using MuseQCDBAccess.Models;
 
 namespace MuseQCDBAccess.Data;
 public class ParticipantData
@@ -29,4 +30,7 @@ public class ParticipantData
 
     public Task<IEnumerable<string>> GetParticipantSite(string WID) =>
         _db.LoadData<string, dynamic>("get_participantSite", new { WID });
+
+    public Task<IEnumerable<ParticipantModel>> GetParticipantsWithMissingInfo() =>
+        _db.LoadData<ParticipantModel, dynamic>("get_participantsWithMissingInfo", new {});
 }

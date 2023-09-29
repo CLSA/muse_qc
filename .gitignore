@@ -375,3 +375,5 @@ appsettings.development.json
 /Python
 /MuseQCReport
 /DB/Testing.sql
+*.pdf
+/SiteLookupFakeSiteMatchesForTesting.csv

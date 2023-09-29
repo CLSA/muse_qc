@@ -142,6 +142,28 @@ public class DbHelpers
         return Db.Collection.GetProcessedEdfList().Result.ToList();
     }
 
+    /// <summary>
+    /// Updates the participant site information for any participants that do not have the information entered
+    /// </summary>
+    /// <param name="studyParticipants">A list of study participants. Many will not have wearables data collected yet</param>
+    public void UpdateParticipantSites(List<ParticipantModel> studyParticipants)
+    {
+        var participantsWithMissingInfo = Db.Participant.GetParticipantsWithMissingInfo().Result;
+        foreach (var participantMissingInfo in participantsWithMissingInfo) 
+        {
+            string westonID = participantMissingInfo.WestonID.ToLower();
+            foreach (var participant in studyParticipants)
+            {
+                if(participant.Site != null && westonID == participant.WestonID.ToLower())
+                {
+                    Db.Participant.UpdateSite(participantMissingInfo.WestonID, participant.Site).Wait();
+                    studyParticipants.Remove(participant);
+                    break;
+                }
+            }
+        }
+    }
+
     #endregion
 
     #region Private methods

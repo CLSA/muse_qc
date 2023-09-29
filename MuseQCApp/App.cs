@@ -116,10 +116,10 @@ public class App
             // increment the number of files that have been downloaded
             filesDownloaded+= numFilesToDownloadThisExecution;
         }
-        
 
         // Create reports
         // TODO: Implement
+        UpdateParticipantSiteInfo();
 
         Logging.LogInformation($"{appName} done running");
     }
@@ -379,6 +379,19 @@ public class App
 
         DbMethods.UpdateEdfFailedProcessing(westonId, podSerial, startDate.Value, updatedEdfPath);
         Logging.LogInformation($"Updated db with processing problem and new path. Old path: {edfPath} New path: {updatedEdfPath}");
+    }
+
+    /// <summary>
+    /// Update the participant site info for any participants that do not have it entered yet
+    /// </summary>
+    private void UpdateParticipantSiteInfo()
+    {
+        string? lookupTablePath = ConfigHelper.GetSiteLookupTableCsvPath();
+        if (lookupTablePath != null)
+        {
+            List<ParticipantModel> participants = SiteLookupTable.ReadSiteLookupTableCsv(lookupTablePath, Logging);
+            DbMethods.UpdateParticipantSites(participants);
+        }
     }
 
     #endregion

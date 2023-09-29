@@ -181,6 +181,40 @@ public class ConfigHelper
         return jpgStorageFolder;
     }
 
+    /// <summary>
+    /// Get the full path to the site lookup table csv
+    /// </summary>
+    /// <returns>The path if the value can be retrived and is formatted correctly, otherwise null</returns>
+    public string? GetSiteLookupTableCsvPath()
+    {
+        // get path from appsettings
+        string? path = GetStringFromConfig("SiteLookupTableCsvPath");
+        
+        // ensure path is not null
+        if (path is null)
+        {
+            Logging.LogWarning("Null Site Lookup Table Csv Path returned from config");
+            return null;
+        }
+
+        // ensure path is csv
+        if(path.ToLower().EndsWith(".csv") == false)
+        {
+            Logging.LogWarning($"Site Lookup Table Csv Path returned from config is not a csv. Path: {path}");
+            return null;
+        }
+
+        // ensure file exists
+        if (File.Exists(path) == false)
+        {
+            Logging.LogWarning($"Site Lookup Table Csv Path returned from config does not exist. Path: {path}");
+            return null;
+        }
+
+        // return path is all checks passed
+        return path;
+    }
+
     #endregion
 
     #region Private methods

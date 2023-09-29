@@ -281,3 +281,20 @@ WHERE processingProblem IS NOT NULL;
 END$$
 
 DELIMITER ;
+
+-- ------------------------------------------
+-- procedure get_participantsWithMissingInfo
+-- ------------------------------------------
+USE `museqcapp`;
+DROP procedure IF EXISTS `get_participantsWithMissingInfo`;
+
+DELIMITER $$
+USE `museqcapp`$$
+CREATE PROCEDURE `get_participantsWithMissingInfo` ()
+BEGIN
+SELECT * 
+FROM museqcapp.participants
+WHERE site IS NULL OR site = "";
+END$$
+
+DELIMITER ;
