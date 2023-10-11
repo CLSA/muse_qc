@@ -164,6 +164,33 @@ public class DbHelpers
         }
     }
 
+    public List<ParticipantCollectionsQualityModel> GetParticipantReportData()
+    {
+        List<ParticipantCollectionsQualityModel> participantQuality = new();
+
+        var collectionReports = Db.Report.GetQualityReportData().Result;
+        if (collectionReports == null) return participantQuality;
+
+
+        Dictionary<string, List<EegQualityReportModel>> participantsDict = new();
+        foreach (var report in collectionReports)
+        {
+            string westonID = report.WestonID.ToLower();
+            if(participantsDict.ContainsKey(westonID) == false)
+            {
+                participantsDict.Add(westonID, new List<EegQualityReportModel>());
+            }
+            participantsDict[westonID].Add(report);
+        }
+
+        // Get summary data
+        foreach(var participant in participantsDict.Values)
+        {
+            participantQuality.Add(new ParticipantCollectionsQualityModel(participant));
+        }
+        return participantQuality;
+    }
+
     #endregion
 
     #region Private methods

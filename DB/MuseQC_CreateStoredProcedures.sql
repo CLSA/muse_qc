@@ -298,3 +298,20 @@ WHERE site IS NULL OR site = "";
 END$$
 
 DELIMITER ;
+
+-- ------------------------------------------
+-- procedure get_qualityReportData
+-- ------------------------------------------
+USE `museqcapp`;
+DROP procedure IF EXISTS `get_qualityReportData`;
+
+DELIMITER $$
+USE `museqcapp`$$
+CREATE PROCEDURE `get_qualityReportData`()
+BEGIN
+SELECT c.westonID, site, startDateTime, uploadDateTime, jpgPath, hasDurationProblem, hasQualityProblem, museQualityVersion, duration, ftany
+FROM museqcapp.participants as p, museqcapp.collection as c, museqcapp.qcstats as qc
+WHERE p.westonID = c.westonID AND c.collectionID = qc.collectionID AND isTest = 0;
+END
+
+DELIMITER ;

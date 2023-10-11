@@ -38,9 +38,9 @@ public class App
     private IMuseQualityDecisions MuseQuality { get; init; }
 
     /// <summary>
-    /// A module for creating muse quality reports
+    /// A writer for writing report csvs
     /// </summary>
-    private IQualityReport QualityReport { get; init; }
+    private ReportCsvWriter ReportWriter { get; init; }
 
     /// <summary>
     /// Helper to interact with DB
@@ -61,15 +61,15 @@ public class App
     /// <param name="museQuality">A module for determining is muse data quality is acceptable</param>
     /// <param name="qualityReport">A module for creating muse quality reports</param>
     public App(ConfigHelper configHelper, ILogger logging, IGoogleBucket bucket,IMuseQualityRunner qualityRunner, 
-        IMuseQualityDecisions museQuality, IQualityReport qualityReport, MysqlDBData db)
+        IMuseQualityDecisions museQuality, MysqlDBData db)
     {
         ConfigHelper = configHelper;
         Logging = logging;
         Bucket = bucket;
         QualityRunner = qualityRunner;
         MuseQuality = museQuality;
-        QualityReport = qualityReport;
         DbMethods = new(db, logging);
+        ReportWriter = new(logging);
     }
 
     #endregion
@@ -83,6 +83,14 @@ public class App
     {
         string appName = AppDomain.CurrentDomain.FriendlyName;
         Logging.LogInformation($"{appName} started running");
+
+        List<ParticipantCollectionsQualityModel> participants = DbMethods.GetParticipantReportData();
+        string? reportFolderPath = ConfigHelper.GetQualityReportCsvFolderPath();
+        if (Directory.Exists(reportFolderPath))
+        {
+            ReportWriter.CreateReportCsvs(participants, reportFolderPath);
+        }
+        
 
         // Get list of files on google bucket
         List<GBDownloadInfoModel> pathsOnBucket = Bucket.GetFilePaths();

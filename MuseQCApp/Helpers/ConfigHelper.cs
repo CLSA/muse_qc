@@ -184,7 +184,7 @@ public class ConfigHelper
     /// <summary>
     /// Get the full path to the site lookup table csv
     /// </summary>
-    /// <returns>The path if the value can be retrived and is formatted correctly, otherwise null</returns>
+    /// <returns>The path if the value can be retrieved and is formatted correctly, otherwise null</returns>
     public string? GetSiteLookupTableCsvPath()
     {
         // get path from appsettings
@@ -213,6 +213,24 @@ public class ConfigHelper
 
         // return path is all checks passed
         return path;
+    }
+
+    /// <summary>
+    /// Get the full path to the Quality Report Csv Folder
+    /// </summary>
+    /// <returns>The path if the value can be retrieved, otherwise null</returns>
+    public string? GetQualityReportCsvFolderPath()
+    {
+        // get path from appsettings
+        string? path = GetStringFromConfig("QualityReportCsvFolderPath");
+
+        // ensure path is not null
+        if (path is null)
+        {
+            Logging.LogWarning("Null Quality Report Csv Folder Path returned from config");
+            return null;
+        }
+        return path; 
     }
 
     #endregion

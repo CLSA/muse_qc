@@ -35,7 +35,6 @@ public class DependencyInjectionBuilder
                 .AddSingleton<IGoogleBucket, GoogleBucket>()
                 .AddSingleton<ISiteLookup, SiteLookup>()
                 .AddSingleton<IMuseQualityRunner, MuseQualityRunner>()
-                .AddSingleton<IQualityReport, QualityReport>()
                 .AddSingleton<IDataAccess, MySqlDataAccess>()
                 .AddSingleton<IMuseQualityDecisions, MuseQualityDecisionsV1>()
                 // Setup and add logger
