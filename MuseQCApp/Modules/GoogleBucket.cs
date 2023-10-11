@@ -2,7 +2,6 @@
 using MuseQCApp.Helpers;
 using MuseQCApp.Interfaces;
 using MuseQCApp.Models;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace MuseQCApp.Modules;
@@ -87,16 +86,35 @@ public class GoogleBucket : IGoogleBucket
     public List<GBDownloadInfoModel> GetFilePaths()
     {
         // Get paths
-        string? bucketPath = ConfigHelper.GetGoogleBucketPath();
+        List<string> bucketPaths = ConfigHelper.GetGoogleBucketPath();
         string? outputTxtPath = ConfigHelper.GetFilesInBucketPath();
         
         // Return empty list if config returns a null path
-        if(bucketPath == null || outputTxtPath == null)
+        if(bucketPaths.Count < 1)
         {
-            Logging.LogWarning("Null google bucket path returned from config");
+            Logging.LogWarning("No google bucket paths returned from config");
             return new List<GBDownloadInfoModel>();
         }
 
+        if(outputTxtPath is null)
+        {
+            Logging.LogWarning("Output text path returned from config is null");
+            return new List<GBDownloadInfoModel>();
+        }
+
+        List<GBDownloadInfoModel> gbInfo = new();
+        for (int i = 0; i < bucketPaths.Count; i++)
+        {
+            string bucketPath = bucketPaths[i];
+            string fullOutPath = $"{outputTxtPath}_{i}.txt";
+            List<GBDownloadInfoModel> singleBucketInfo = GetFilePathsFromSingleBucket(bucketPath, fullOutPath);
+            gbInfo.AddRange(singleBucketInfo);
+        }
+        return gbInfo;
+    }
+
+    private List<GBDownloadInfoModel> GetFilePathsFromSingleBucket(string bucketPath, string outputTxtPath)
+    {
         // Remove the previous output file if there is one
         if (File.Exists(outputTxtPath))
         {
@@ -113,7 +131,7 @@ public class GoogleBucket : IGoogleBucket
 
         // Wait up to 60 seconds for command line to finish running command
         DateTime startTime = DateTime.Now;
-        while (File.Exists(outputTxtPath) == false && (DateTime.Now - startTime).TotalSeconds < 60) {}
+        while (File.Exists(outputTxtPath) == false && (DateTime.Now - startTime).TotalSeconds < 60) { }
 
         // Read eeg filepaths from txt file and return as list
         return ReadEEGFilesFromOutputTxt(outputTxtPath);
@@ -170,7 +188,7 @@ public class GoogleBucket : IGoogleBucket
             while (sr.EndOfStream == false)
             {
                 string? line = sr.ReadLine();
-                if (line != null && line.Trim().EndsWith("eeg.edf"))
+                if (line != null && line.Trim().ToLower().EndsWith("eeg.edf"))
                 {
                     GBDownloadInfoModel? gbInfo = GetGbInfoFromLine(line);
                     if(gbInfo != null)

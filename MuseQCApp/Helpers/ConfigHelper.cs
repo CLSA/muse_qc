@@ -43,13 +43,14 @@ public class ConfigHelper
     /// Get the full path to the google bucket from configuration
     /// </summary>
     /// <returns>The full path to the google bucket</returns>
-    public string? GetGoogleBucketPath()
+    public List<string> GetGoogleBucketPath()
     {
-        return GetStringFromConfig("GoogleBucketPath");
+        List<string> bucketPaths = GetListFromConfig<string>("GoogleBucketPath");
+        return bucketPaths is not null ? bucketPaths.ToList() : new List<string>();
     }
 
     /// <summary>
-    /// Get the full path for where to store the command line output of files 
+    /// Get the full path without extension for where to store the command line output of files 
     /// located in the google bucket
     /// </summary>
     /// <returns>The full path</returns>
@@ -244,12 +245,34 @@ public class ConfigHelper
     /// <returns>A string of the value or null if not found</returns>
     private string? GetStringFromConfig(string configKey)
     {
-        string? val = Configuration.GetValue<string>(configKey);
+        return GetValueFromConfig<string>(configKey);
+    }
+
+    /// <summary>
+    /// Gets a value from the configuration
+    /// </summary>
+    /// <typeparam name="T">The type of the value to return</typeparam>
+    /// <param name="configKey">The config key</param>
+    /// <returns>The value or null if not found</returns>
+    private T? GetValueFromConfig<T>(string configKey)
+    {
+        T? val = Configuration.GetValue<T>(configKey);
         if (val is null)
         {
             Logging.LogWarning($"The key \"{configKey})\" does not exist in the configuration");
         }
         return val;
+    }
+
+    /// <summary>
+    /// Gets a string value from the configuration
+    /// </summary>
+    /// <param name="configKey">The config key</param>
+    /// <returns>A string of the value or null if not found</returns>
+    private List<T> GetListFromConfig<T>(string configKey)
+    {
+        T[]? vals = Configuration.GetSection(configKey).Get<T[]>();
+        return vals is null ? new List<T>() : vals.ToList();
     }
 
     #endregion
