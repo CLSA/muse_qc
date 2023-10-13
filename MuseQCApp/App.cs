@@ -91,7 +91,6 @@ public class App
             ReportWriter.CreateReportCsvs(participants, reportFolderPath);
         }
         
-
         // Get list of files on google bucket
         List<GBDownloadInfoModel> pathsOnBucket = Bucket.GetFilePaths();
 

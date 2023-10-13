@@ -25,12 +25,14 @@ public class ReportCsvWriter
     /// <param name="outputFolder">The folder to write output csv files to</param>
     public void CreateReportCsvs(List<ParticipantCollectionsQualityModel> participants, string outputFolder)
     {
-        string month = DateTime.Now.AddMonths(-1).ToString("MMMM_yyyy");
-        string csvPath = Path.Combine(outputFolder, $"QualityReport_{month}.csv");
+        DateOnly lastMonth = DateOnly.FromDateTime(DateTime.Now.AddMonths(-1));
+        lastMonth = lastMonth.AddDays(1 - lastMonth.Day).AddMonths(1).AddDays(-1);
+        string lastMonthStr = lastMonth.ToString("MMMM_yyyy");
+        string csvPath = Path.Combine(outputFolder, $"QualityReport_{lastMonthStr}.csv");
 
         if (File.Exists(csvPath)) return;
 
-        Dictionary<string, Dictionary<DateOnly, QualitySummaryModel>> summariesDict = GetSummaryStats(participants);
+        Dictionary<string, Dictionary<DateOnly, QualitySummaryModel>> summariesDict = GetSummaryStats(participants, lastMonth);
 
         using StreamWriter sw = new(csvPath);
 
@@ -64,7 +66,8 @@ public class ReportCsvWriter
                 {
                     toWrite += key;
                 }
-                toWrite += $",{date},{cur.Days0},{cur.Days1},{cur.Days2},{cur.Days3},{cur.Days4Plus}," +
+                string dateStr = date.ToString("MMM yy");
+                toWrite += $",{dateStr},{cur.Days0},{cur.Days1},{cur.Days2},{cur.Days3},{cur.Days4Plus}," +
                     $"{cur.DurationProblem},{cur.QualityProblem},{cur.LowFilesProblem}";
                 sw.WriteLine(toWrite);
             }
@@ -104,7 +107,7 @@ public class ReportCsvWriter
                     string toWrite = "";
                     if (firstPrinted == false)
                     {
-                        toWrite += printDate;
+                        toWrite += printDate.ToDateTime(TimeOnly.MinValue).ToString("MMMM yyyy");
                     }
                     toWrite += $",{key},{cur.Days0},{cur.Days1},{cur.Days2},{cur.Days3},{cur.Days4Plus}," +
                         $"{cur.DurationProblem},{cur.QualityProblem},{cur.LowFilesProblem}";
@@ -141,7 +144,7 @@ public class ReportCsvWriter
         if (allTimeDict.Count > 0)
         {
             QualitySummaryModel first = allTimeDict.Values.First();
-            sw.WriteLine($"AllTime,{allTimeDict.Keys.First()},{first.Days0},{first.Days1},{first.Days2},{first.Days3},{first.Days4Plus}," +
+            sw.WriteLine($"All FUP3 Collections Summary,{allTimeDict.Keys.First()},{first.Days0},{first.Days1},{first.Days2},{first.Days3},{first.Days4Plus}," +
                 $"{first.DurationProblem},{first.QualityProblem},{first.LowFilesProblem}");
         }
         foreach(string key in allTimeDict.Keys.Skip(1))
@@ -152,16 +155,19 @@ public class ReportCsvWriter
         }
     }
 
-    private Dictionary<string, Dictionary<DateOnly, QualitySummaryModel>> GetSummaryStats(List<ParticipantCollectionsQualityModel> participants)
+    private Dictionary<string, Dictionary<DateOnly, QualitySummaryModel>> GetSummaryStats(
+        List<ParticipantCollectionsQualityModel> participants, DateOnly lastMonth)
     {
         Dictionary<string, Dictionary<DateOnly, QualitySummaryModel>> summariesDict = new();
         foreach (var participant in participants)
         {
+            // Skip participant if collection is after the last month being checked
+            if (participant.CollectionMonth.CompareTo(lastMonth) >= 0) continue;
+
             // Set participant site string to their site or "" if null
             string participantSite = participant.Site is not null ? participant.Site  : "";
 
             // Add site if doesn't exist
-            // TODO: Why is this throwing null???????????????????????????????????
             if (summariesDict.Keys is null || summariesDict.Keys.Contains(participantSite) == false)
                 summariesDict.Add(participantSite, new());
 
