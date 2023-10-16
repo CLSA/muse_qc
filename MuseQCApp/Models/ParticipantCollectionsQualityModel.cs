@@ -52,7 +52,7 @@ public class ParticipantCollectionsQualityModel
     /// <summary>
     /// The number of days of data total good or bad quality
     /// </summary>
-    public int NumberDays => EegQualityReportModels.Count;
+    public int NumberCollections => EegQualityReportModels.Count;
 
     /// <summary>
     /// True if at least one of the days of data has a duration issue, false otherwise
@@ -67,7 +67,7 @@ public class ParticipantCollectionsQualityModel
     /// <summary>
     /// True if there are less than 3 days of collected data for this participant, false otherwise
     /// </summary>
-    public bool HasLessThan3Days => NumberDays < 3;
+    public bool HasLessThan3Days => NumberCollections < 3;
 
     /// <summary>
     /// True if this participant has atleast one file with a duration or 

@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using MuseQCApp.Models;
 using MuseQCDBAccess.Models;
+using System.Security.Policy;
+using System;
 
 namespace MuseQCApp.Logic;
 public class ReportCsvWriter
@@ -26,8 +28,37 @@ public class ReportCsvWriter
     /// <param name="outputFolder">The folder to write output csv files to</param>
     public void CreateReportCsvs(List<ParticipantCollectionsQualityModel> participants, string outputFolder)
     {
+        CreateNumberOfDaysByWestonIdReports(participants, outputFolder);
         CreateSummaryReport(participants, outputFolder);
         CreateInDepthSiteReports(participants, outputFolder);
+    }
+
+    private void CreateNumberOfDaysByWestonIdReports(List<ParticipantCollectionsQualityModel> participants, string outputFolder)
+    {
+        List<string> sites = new();
+        foreach (var participant in participants)
+        {
+            if(sites.Contains(participant.Site) == false)
+            {
+                sites.Add(participant.Site);
+            }
+        }
+
+        string date = DateTime.Now.ToString("yyyy_MM_dd");
+        foreach (var site in sites)
+        {
+            string csvPath = Path.Combine(outputFolder, $"MuseNumberOfDaysByWestonId_{site}_{date}.csv");
+            using (StreamWriter sw = new(csvPath))
+            {
+                sw.WriteLine("WestonID,Days of good data,Total collections recorded (> 30 mins)");
+                foreach(var participant in participants)
+                {
+                    // skip if participant is from a different site
+                    if (participant.Site != site) continue;
+                    sw.WriteLine($"{participant.WestonID},{participant.NumberGoodDays},{participant.NumberCollections}");
+                }
+            }
+        }
     }
 
     private void CreateInDepthSiteReports(List<ParticipantCollectionsQualityModel> participants, string outputFolder)
