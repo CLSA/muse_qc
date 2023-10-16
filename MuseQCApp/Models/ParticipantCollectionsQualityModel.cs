@@ -10,7 +10,7 @@ public class ParticipantCollectionsQualityModel
     /// <summary>
     /// A list of the eeg report quality for each collection from this participant
     /// </summary>
-    private List<EegQualityReportModel> EegQualityReportModels { get; init; }
+    public List<EegQualityReportModel> EegQualityReportModels { get; init; }
 
     /// <summary>
     /// The WestonID of the participant
@@ -68,6 +68,14 @@ public class ParticipantCollectionsQualityModel
     /// True if there are less than 3 days of collected data for this participant, false otherwise
     /// </summary>
     public bool HasLessThan3Days => NumberDays < 3;
+
+    /// <summary>
+    /// True if this participant has atleast one file with a duration or 
+    /// signal quality problem or if the participant has less than 3 total 
+    /// collections. False otherwise
+    /// </summary>
+    public bool HasAtleastOneProblem => 
+        HasAtLeast1DurationIssue || HasAtLeast1QualityIssue || HasLessThan3Days;
 
     /// <summary>
     /// True if any file has a start date 10 days later than the previously collected file

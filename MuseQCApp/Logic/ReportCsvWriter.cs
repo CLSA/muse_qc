@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using MuseQCApp.Models;
+using MuseQCDBAccess.Models;
 
 namespace MuseQCApp.Logic;
 public class ReportCsvWriter
@@ -24,6 +25,88 @@ public class ReportCsvWriter
     /// <param name="participants">Report quality data for each participant</param>
     /// <param name="outputFolder">The folder to write output csv files to</param>
     public void CreateReportCsvs(List<ParticipantCollectionsQualityModel> participants, string outputFolder)
+    {
+        CreateSummaryReport(participants, outputFolder);
+        CreateInDepthSiteReports(participants, outputFolder);
+    }
+
+    private void CreateInDepthSiteReports(List<ParticipantCollectionsQualityModel> participants, string outputFolder)
+    {
+        Dictionary<string, Dictionary<DateOnly, Dictionary<bool, List<ParticipantCollectionsQualityModel>>>> dict
+            = CreateInDepthParticipantQualityDict(participants);
+
+        foreach(string site in  dict.Keys)
+        {
+            foreach(DateOnly dateOnly in dict[site].Keys)
+            {
+                string monthStr = dateOnly.ToString("MMMM_yyyy");
+                string csvPath = Path.Combine(outputFolder, $"InDepthQualityReport_{site}_{monthStr}.csv");
+                Dictionary<bool, List<ParticipantCollectionsQualityModel>> csvInfoDict = dict[site][dateOnly];
+                using(StreamWriter sw = new(csvPath))
+                {
+                    sw.WriteLine("Section Header,Weston ID,Jpg Path,Start Date,Quality Prob,Duration Prob");
+
+                    sw.WriteLine("Problems");
+                    List<ParticipantCollectionsQualityModel> lessThan3DaysList = new();
+                    foreach(ParticipantCollectionsQualityModel participant in csvInfoDict[true])
+                    {
+                        if (participant.HasLessThan3Days 
+                            && participant.HasAtLeast1QualityIssue == false
+                            && participant.HasAtLeast1DurationIssue == false)
+                        {
+                            lessThan3DaysList.Add(participant);
+                        }
+                        else
+                        {
+                            WriteInDepthInfo(sw, participant);
+                        }
+                    }
+
+                    sw.WriteLine("Problems: Less than 3 data collections");
+                    foreach (ParticipantCollectionsQualityModel participant in lessThan3DaysList)
+                    {
+                        WriteInDepthInfo(sw, participant);
+                    }
+
+                    sw.WriteLine("Good collections");
+                    foreach (ParticipantCollectionsQualityModel participant in csvInfoDict[false])
+                    {
+                        WriteInDepthInfo(sw, participant);
+                    }
+                }
+            }
+        }
+    }
+
+    private void WriteInDepthInfo(StreamWriter sw, ParticipantCollectionsQualityModel p)
+    {
+        p.EegQualityReportModels.OrderBy(x => x.StartDateTime);
+        foreach(EegQualityReportModel eeg in p.EegQualityReportModels)
+        {
+            sw.WriteLine($",{p.WestonID},{eeg.JpgPath},{eeg.StartDateTime},{eeg.HasQualityProblem},{eeg.HasDurationProblem}");
+        }
+    }
+
+    private Dictionary<string, Dictionary<DateOnly, Dictionary<bool, List<ParticipantCollectionsQualityModel>>>> CreateInDepthParticipantQualityDict
+        (List<ParticipantCollectionsQualityModel> participants)
+    {
+        Dictionary<string, Dictionary<DateOnly, Dictionary<bool, List<ParticipantCollectionsQualityModel>>>> dict = new();
+        foreach (ParticipantCollectionsQualityModel p in participants)
+        {
+            // Add site to dict if not added already
+            if (dict.ContainsKey(p.Site) == false)
+                dict.Add(p.Site, new());
+
+            // Add month to dict if not added already
+            if (dict[p.Site].ContainsKey(p.CollectionMonth) == false)
+                dict[p.Site].Add(p.CollectionMonth, new() { { true, new()}, { false, new()} });
+
+            dict[p.Site][p.CollectionMonth][p.HasAtleastOneProblem].Add(p);
+        }
+        return dict;
+    }
+
+    private void CreateSummaryReport(List<ParticipantCollectionsQualityModel> participants, string outputFolder)
     {
         DateOnly lastMonth = DateOnly.FromDateTime(DateTime.Now.AddMonths(-1));
         lastMonth = lastMonth.AddDays(1 - lastMonth.Day).AddMonths(1).AddDays(-1);
