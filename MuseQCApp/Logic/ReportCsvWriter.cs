@@ -35,28 +35,41 @@ public class ReportCsvWriter
 
     private void CreateNumberOfDaysByWestonIdReports(List<ParticipantCollectionsQualityModel> participants, string outputFolder)
     {
-        List<string> sites = new();
-        foreach (var participant in participants)
-        {
-            if(sites.Contains(participant.Site) == false)
-            {
-                sites.Add(participant.Site);
-            }
-        }
+        // CODE TO CREATE FILES BASED ON SITE
+
+        //List<string> sites = new();
+        //foreach (var participant in participants)
+        //{
+        //    if(sites.Contains(participant.Site) == false)
+        //    {
+        //        sites.Add(participant.Site);
+        //    }
+        //}
+
+        //string date = DateTime.Now.ToString("yyyy_MM_dd");
+        //foreach (var site in sites)
+        //{
+        //    string csvPath = Path.Combine(outputFolder, $"MuseNumberOfDaysByWestonId_{site}_{date}.csv");
+        //    using (StreamWriter sw = new(csvPath))
+        //    {
+        //        sw.WriteLine("WestonID,Days of good data,Total collections recorded (> 30 mins)");
+        //        foreach(var participant in participants)
+        //        {
+        //            // skip if participant is from a different site
+        //            if (participant.Site != site) continue;
+        //            sw.WriteLine($"{participant.WestonID},{participant.NumberGoodDays},{participant.NumberCollections}");
+        //        }
+        //    }
+        //}
 
         string date = DateTime.Now.ToString("yyyy_MM_dd");
-        foreach (var site in sites)
+        string csvPath = Path.Combine(outputFolder, $"MuseNumberOfDaysByWestonId_{date}.csv");
+        using (StreamWriter sw = new(csvPath))
         {
-            string csvPath = Path.Combine(outputFolder, $"MuseNumberOfDaysByWestonId_{site}_{date}.csv");
-            using (StreamWriter sw = new(csvPath))
+            sw.WriteLine("WestonID,Days of good data,Total collections recorded (> 30 mins)");
+            foreach (var participant in participants)
             {
-                sw.WriteLine("WestonID,Days of good data,Total collections recorded (> 30 mins)");
-                foreach(var participant in participants)
-                {
-                    // skip if participant is from a different site
-                    if (participant.Site != site) continue;
-                    sw.WriteLine($"{participant.WestonID},{participant.NumberGoodDays},{participant.NumberCollections}");
-                }
+                sw.WriteLine($"{participant.WestonID},{participant.NumberGoodDays},{participant.NumberCollections}");
             }
         }
     }
