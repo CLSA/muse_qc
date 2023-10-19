@@ -186,7 +186,8 @@ public class DbHelpers
         // Get summary data
         foreach(var participant in participantsDict.Values)
         {
-            participantQuality.Add(new ParticipantCollectionsQualityModel(participant));
+            var orderedParticipant = participant.OrderBy(x => x.StartDateTime).ToList();
+            participantQuality.Add(new ParticipantCollectionsQualityModel(orderedParticipant));
         }
         return participantQuality;
     }

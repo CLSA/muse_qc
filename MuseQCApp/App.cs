@@ -90,6 +90,10 @@ public class App
         {
             ReportWriter.CreateReportCsvs(participants, reportFolderPath);
         }
+        else
+        {
+            Logging.LogWarning($"Report folder not found. Path: {reportFolderPath}");
+        }
         
         // Get list of files on google bucket
         List<GBDownloadInfoModel> pathsOnBucket = Bucket.GetFilePaths();
