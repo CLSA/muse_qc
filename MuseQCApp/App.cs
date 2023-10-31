@@ -40,7 +40,7 @@ public class App
     /// <summary>
     /// A writer for writing report csvs
     /// </summary>
-    private ReportCsvWriter ReportWriter { get; init; }
+    private ReportWriter ReportWriter { get; init; }
 
     /// <summary>
     /// Helper to interact with DB
@@ -85,15 +85,14 @@ public class App
         Logging.LogInformation($"{appName} started running");
 
         List<ParticipantCollectionsQualityModel> participants = DbMethods.GetParticipantReportData();
-        string? reportFolderPath = ConfigHelper.GetQualityReportCsvFolderPath();
-        if (Directory.Exists(reportFolderPath))
-        {
-            ReportWriter.CreateReportCsvs(participants, reportFolderPath);
-        }
-        else
-        {
+        string? reportFolderPath = ConfigHelper.GetQualityReportFolderPath();
+        string? pythonExePath = ConfigHelper.GetPythonExePath();
+        if (Directory.Exists(reportFolderPath) == false)
             Logging.LogWarning($"Report folder not found. Path: {reportFolderPath}");
-        }
+        else if (File.Exists(pythonExePath) == false)
+            Logging.LogWarning($"Python exe file not found. Path: {pythonExePath}");
+        else
+            ReportWriter.CreateReports(participants, reportFolderPath, pythonExePath); 
         
         // Get list of files on google bucket
         List<GBDownloadInfoModel> pathsOnBucket = Bucket.GetFilePaths();

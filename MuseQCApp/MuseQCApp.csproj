@@ -8,11 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Python\MuseQualityReportPdfCreation.py" />
     <None Remove="R\edf_tools_200712.R" />
     <None Remove="R\MUSE_clean_QC.R" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Python\MuseQualityReportPdfCreation.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="R\edf_tools_200712.R">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>

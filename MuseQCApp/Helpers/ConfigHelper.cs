@@ -220,10 +220,10 @@ public class ConfigHelper
     /// Get the full path to the Quality Report Csv Folder
     /// </summary>
     /// <returns>The path if the value can be retrieved, otherwise null</returns>
-    public string? GetQualityReportCsvFolderPath()
+    public string? GetQualityReportFolderPath()
     {
         // get path from appsettings
-        string? path = GetStringFromConfig("QualityReportCsvFolderPath");
+        string? path = GetStringFromConfig("QualityReportFolderPath");
 
         // ensure path is not null
         if (path is null)
@@ -232,6 +232,24 @@ public class ConfigHelper
             return null;
         }
         return path; 
+    }
+
+    /// <summary>
+    /// Get the full path to the python exe path
+    /// </summary>
+    /// <returns>The path if the value can be retrieved, otherwise null</returns>
+    public string? GetPythonExePath()
+    {
+        // get path from appsettings
+        string? path = GetStringFromConfig("PythonExePath");
+
+        // ensure path is not null
+        if (path is null)
+        {
+            Logging.LogWarning("Null python exe Path returned from config");
+            return null;
+        }
+        return path;
     }
 
     #endregion
