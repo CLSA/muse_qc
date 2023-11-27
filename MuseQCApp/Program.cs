@@ -12,20 +12,28 @@ try
 {
     Console.WriteLine(args.Length);
 
-    List<int> parsedArgs = ParseArgs(args);
+    (bool,List<int>) parsedArgs = ParseArgs(args);
 
-    // Run the application
-    if (parsedArgs.Count == 0)
+    if (parsedArgs.Item1)
     {
-        services.GetRequiredService<App>().Run();
-    }
-    else if (parsedArgs.Count == 1)
-    {
-        services.GetRequiredService<App>().Run(parsedArgs[0]);
+        services.GetRequiredService<App>().CreateReports();
     }
     else
     {
-        services.GetRequiredService<App>().Run(parsedArgs[0], parsedArgs[1]);
+        // Run the application
+        List<int> parsedInts = parsedArgs.Item2;
+        if (parsedInts.Count == 0)
+        {
+            services.GetRequiredService<App>().Run();
+        }
+        else if (parsedInts.Count == 1)
+        {
+            services.GetRequiredService<App>().Run(parsedInts[0]);
+        }
+        else
+        {
+            services.GetRequiredService<App>().Run(parsedInts[0], parsedInts[1]);
+        }
     }
 }
 catch(Exception ex)
@@ -35,25 +43,38 @@ catch(Exception ex)
 }
 
 
-List<int> ParseArgs(string[] args)
+(bool, List<int>) ParseArgs(string[] args)
 {
-    List<int> parsedArgs = new();
-    try
+    List<int> ints = new();
+    if (args[0] == "CreateReports")
     {
-        if (args.Length >= 1)
+        return (true, ints);
+    }
+    else
+    {
+        try
         {
-            parsedArgs.Add(int.Parse(args[0]));
-        }
+            if (args.Length >= 1)
+            {
+                ints.Add(int.Parse(args[0]));
+            }
 
-        if (args.Length >= 2)
+            if (args.Length >= 2)
+            {
+                ints.Add(int.Parse(args[1]));
+            }
+        }
+        catch
         {
-            parsedArgs.Add(int.Parse(args[1]));
+            string argStr = "";
+            foreach (string arg in args)
+            {
+                argStr += arg + " ";
+            }
+            Console.WriteLine($"Problem parsing one or more of the args passed in. Expected 0-2 integer arguments. Args: {argStr}");
+            Console.ReadLine();
         }
     }
-    catch 
-    {
-        Console.WriteLine("Problem parsing one or more of the args passed in. Expected 0-2 integer arguments");
-    }
 
-    return parsedArgs;
+    return (false, ints);
 }

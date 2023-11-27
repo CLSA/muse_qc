@@ -83,16 +83,6 @@ public class App
     {
         string appName = AppDomain.CurrentDomain.FriendlyName;
         Logging.LogInformation($"{appName} started running");
-
-        List<ParticipantCollectionsQualityModel> participants = DbMethods.GetParticipantReportData();
-        string? reportFolderPath = ConfigHelper.GetQualityReportFolderPath();
-        string? pythonExePath = ConfigHelper.GetPythonExePath();
-        if (Directory.Exists(reportFolderPath) == false)
-            Logging.LogWarning($"Report folder not found. Path: {reportFolderPath}");
-        else if (File.Exists(pythonExePath) == false)
-            Logging.LogWarning($"Python exe file not found. Path: {pythonExePath}");
-        else
-            ReportWriter.CreateReports(participants, reportFolderPath, pythonExePath); 
         
         // Get list of files on google bucket
         List<GBDownloadInfoModel> pathsOnBucket = Bucket.GetFilePaths();
@@ -127,11 +117,25 @@ public class App
             filesDownloaded+= numFilesToDownloadThisExecution;
         }
 
-        // Create reports
-        // TODO: Implement
+        Logging.LogInformation($"{appName} done running");
+    }
+
+    /// <summary>
+    /// Runs the report creation process
+    /// </summary>
+    public void CreateReports()
+    {
         UpdateParticipantSiteInfo();
 
-        Logging.LogInformation($"{appName} done running");
+        List<ParticipantCollectionsQualityModel> participants = DbMethods.GetParticipantReportData();
+        string? reportFolderPath = ConfigHelper.GetQualityReportFolderPath();
+        string? pythonExePath = ConfigHelper.GetPythonExePath();
+        if (Directory.Exists(reportFolderPath) == false)
+            Logging.LogWarning($"Report folder not found. Path: {reportFolderPath}");
+        else if (File.Exists(pythonExePath) == false)
+            Logging.LogWarning($"Python exe file not found. Path: {pythonExePath}");
+        else
+            ReportWriter.CreateReports(participants, reportFolderPath, pythonExePath);
     }
 
     #endregion
