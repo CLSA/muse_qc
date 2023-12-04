@@ -47,35 +47,31 @@ public class ParticipantCollectionsQualityModel
     /// <summary>
     /// The number of days of good quality data where no issues occured
     /// </summary>
-    public int NumberGoodDays => EegQualityReportModels.Where(x => x.HasDurationProblem == false && x.HasQualityProblem == false).Count();
+    public int NumberGoodDays => EegQualityReportModels.Where(x => x.HasProblem == false).Count();
 
     /// <summary>
     /// The number of days of data total good or bad quality
     /// </summary>
     public int NumberCollections => EegQualityReportModels.Count;
 
-    /// <summary>
-    /// True if at least one of the days of data has a duration issue, false otherwise
-    /// </summary>
-    public bool HasAtLeast1DurationIssue => EegQualityReportModels.Where(x => x.LessThan5HoursDuration && NumberGoodDays < 3).Count() > 0;
-
-    /// <summary>
-    /// True if at least one of the days of data has a signal quality issue, false otherwise
-    /// </summary>
-    public bool HasAtLeast1QualityIssue => EegQualityReportModels.Where(x => x.HasQualityProblem && NumberGoodDays < 3).Count() > 0;
+    public int NumberDurationIssues => EegQualityReportModels.Where(x => x.LessThan5HoursDuration == true).Count();
+    public int NumberFrontalIssues => EegQualityReportModels.Where(x => x.FrontalProblem == true).Count();
+    public int NumberTemporalIssues => EegQualityReportModels.Where(x => x.TemporalProblem == true).Count();
 
     /// <summary>
     /// True if there are less than 3 days of collected data for this participant, false otherwise
     /// </summary>
     public bool HasLessThan3Days => NumberCollections < 3;
 
+    public bool HasDataProblem => EegQualityReportModels.Where(x => x.LessThan5HoursDuration || x.FrontalProblem || x.TemporalProblem).Count() > 0;
+
     /// <summary>
     /// True if this participant has atleast one file with a duration or 
     /// signal quality problem or if the participant has less than 3 total 
     /// collections. False otherwise
     /// </summary>
-    public bool HasAtleastOneProblem => 
-        HasAtLeast1DurationIssue || HasAtLeast1QualityIssue || HasLessThan3Days;
+    public bool HasAtleastOneProblem => NumberGoodDays < 3
+        && (HasLessThan3Days || HasDataProblem);
 
     /// <summary>
     /// True if any file has a start date 10 days later than the previously collected file

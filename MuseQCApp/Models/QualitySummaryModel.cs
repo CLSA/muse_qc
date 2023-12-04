@@ -31,16 +31,19 @@ public class QualitySummaryModel
     public int Days4Plus { get; set; }
 
     /// <summary>
-    /// The number of participants that have a duration problem 
-    /// NOTE: the same participant can be counted up to once for each of the problem types
+    /// The number of individual collections with a duration issue 
     /// </summary>
     public int DurationProblem { get; set; }
 
     /// <summary>
-    /// The number of participants that have a signal quality problem 
-    /// NOTE: the same participant can be counted up to once for each of the problem types
+    /// The number of individual collections with a frontal quality issue 
     /// </summary>
-    public int QualityProblem { get; set; }
+    public int QualityFrontalProblem { get; set; }
+
+    /// <summary>
+    /// The number of individual collections with a temporal quality issue
+    /// </summary>
+    public int QualityTemporalProblem { get; set; }
 
     /// <summary>
     /// The number of participants that have fewer than 3 days of collected data

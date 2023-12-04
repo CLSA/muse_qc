@@ -100,7 +100,7 @@ class PDF(FPDF):
          if(secondRowToDisplay):
             cell1NewX = XPos.RIGHT
             cell1NewY = YPos.TOP
-         cell1Text = "Start Date: {}\nQuality: {}\nDuration: {}".format(firstCollection.startDateTime,firstCollection.qualityProblem ,firstCollection.durationProblem)
+         cell1Text = "Start Date: {}\nProblems: {}\n".format(firstCollection.startDateTime,firstCollection.problems)
          self.multi_cell(width, height, cell1Text, 0, align = 'L', new_x= cell1NewX, new_y=cell1NewY)
 
          # cell 2
@@ -108,7 +108,7 @@ class PDF(FPDF):
          if(secondRowToDisplay):
             xCell2Start = self.x
             secondCollection = participant.collections[i + 1]
-            cell2Text = "Start Date: {}\nQuality: {}\nDuration: {}".format(secondCollection.startDateTime,secondCollection.qualityProblem ,secondCollection.durationProblem)
+            cell2Text = "Start Date: {}\nProblems: {}\n".format(secondCollection.startDateTime,secondCollection.problems )
             self.multi_cell(width, height, cell2Text, 0, align = 'L', new_x= XPos.LEFT, new_y=YPos.NEXT)
 
          # image 1
@@ -185,72 +185,58 @@ def generateHtmlSummaryTableBody(tableData):
 
    # Add 0 days
    html += """<tr>
-      <th align="center" bgcolor='""" + bgIssueColour + """'>0 Days</th>"""
+      <th align="center">0 Days</th>"""
    for entry in tableData.entries:
       html += """<td align="right">""" + entry.getD0Str() + """</td>"""
    html += htmlRowEnd
 
    # Add 1 day
    html += """<tr bgcolor='""" + bgColour + """'>
-      <th align="center" bgcolor='""" + bgIssueColour + """'>1 Day</th>"""
+      <th align="center">1+ Days</th>"""
    for entry in tableData.entries:
       html += """<td align="right">""" + entry.getD1Str() + """</td>"""
    html += htmlRowEnd
 
    # Add 2 days
    html += """<tr>
-      <th align="center" bgcolor='""" + bgIssueColour + """'>2 Days</th>"""
+      <th align="center">2+ Days</th>"""
    for entry in tableData.entries:
       html += """<td align="right">""" + entry.getD2Str() + """</td>"""
    html += htmlRowEnd
 
    # Add 3 days
    html += """<tr bgcolor='""" + bgColour + """'>
-      <th align="center" bgcolor='""" + bgGoodColour + """'>3 Days</th>"""
+      <th align="center">3+ Days</th>"""
    for entry in tableData.entries:
       html += """<td align="right">""" + entry.getD3Str() + """</td>"""
    html += htmlRowEnd
 
    # Add 4+ days
    html += """<tr>
-      <th align="center" bgcolor='""" + bgGoodColour + """'>4+ Days</th>"""
+      <th align="center">4+ Days</th>"""
    for entry in tableData.entries:
       html += """<td align="right">""" + entry.getD4PlusStr() + """</td>"""
    html += htmlRowEnd
 
    # Add Duration Problem
    html += """<tr bgcolor='""" + bgColour + """'>
-      <th align="center" bgcolor='""" + bgIssueColour + """'>Duration</th>"""
+      <th align="center">Duration</th>"""
    for entry in tableData.entries:
       html += """<td align="right">""" + entry.getDurationStr() + """</td>"""
    html += htmlRowEnd
 
-   # Add Quality Problem
+   # Add Quality Problem (Frontal)
    html += """<tr>
-      <th align="center" bgcolor='""" + bgIssueColour + """'>Quality</th>"""
+      <th align="center">Frontal</th>"""
    for entry in tableData.entries:
-      html += """<td align="right">""" + entry.getQualityStr() + """</td>"""
+      html += """<td align="right">""" + entry.getFrontalStr() + """</td>"""
    html += htmlRowEnd
 
-   # Add < 3 Files
+   # Add Quality Problem (Temporal)
    html += """<tr bgcolor='""" + bgColour + """'>
-      <th align="center" bgcolor='""" + bgIssueColour + """'>Missing</th>"""
+      <th align="center">Temporal</th>"""
    for entry in tableData.entries:
-      html += """<td align="right">""" + entry.getLessThan3Str() + """</td>"""
-   html += htmlRowEnd
-
-   # Add Bad total
-   html += """<tr>
-      <th align="center" bgcolor='""" + bgSummaryColour + """'>0-2 Days</th>"""
-   for entry in tableData.entries:
-      html += """<td align="right">""" + entry.getBadStr() + """</td>"""
-   html += htmlRowEnd
-
-   # Add Good total
-   html += """<tr bgcolor='""" + bgColour + """'>
-      <th align="center" bgcolor='""" + bgSummaryColour + """'>3+ Days</th>"""
-   for entry in tableData.entries:
-      html += """<td align="right">""" + entry.getGoodStr() + """</td>"""
+      html += """<td align="right">""" + entry.getTemporalStr() + """</td>"""
    html += htmlRowEnd
 
    return  html
@@ -259,28 +245,25 @@ def generateHtmlSummaryTableBody(tableData):
             containing muse quality summary data
 """
 class HtmlSummaryTableEntry:
-   def __init__(self, label,d0,d1,d2,d3,d4Plus,durProb,qualityProb,lessThan3):
+   def __init__(self, label,d0,d1,d2,d3,d4Plus,durProb,frontalProb, temporalProb,lessThan3):
       self.label = label
-      self.d0 = d0
-      self.d1 = d1
-      self.d2 = d2
-      self.d3 = d3
-      self.d4Plus = d4Plus
+      self.d0 = d0 # exactly 0
+      self.d1 = d1 + d2 + d3 + d4Plus # atleast 1
+      self.d2 = d2 + d3 + d4Plus # atleast 2
+      self.d3 = d3 + d4Plus # atleast 3
+      self.d4Plus = d4Plus # atleast 4
       self.duration = durProb
-      self.quality = qualityProb
+      self.frontalProb = frontalProb
+      self.temporalProb = temporalProb
       self.lessThan3 = lessThan3
       self.good = self.d3 + self.d4Plus
       self.bad = self.d0 + self.d1 + self.d2
-      self.total = self.d0 + self.d1 + self.d2 + self.d3 + self.d4Plus
+      self.total = d0 + d1 + d2 + d3 + d4Plus
       self.d0Percent = self.d0 * 100.0 / self.total
       self.d1Percent = self.d1 * 100.0 / self.total
       self.d2Percent = self.d2 * 100.0 / self.total
       self.d3Percent = self.d3 * 100.0 / self.total
       self.d4PlusPercent = self.d4Plus * 100.0 / self.total
-      self.goodPercent = self.good * 100.0 / self.total
-      self.badPercent = self.bad * 100.0 / self.total
-      self.durationPercent = self.duration * 100.0 / self.total
-      self.qualityPercent = self.quality * 100.0 / self.total
       self.lessThan3Percent = self.lessThan3 * 100.0 / self.total
 
    def formatStr(self, val,percent):
@@ -301,17 +284,14 @@ class HtmlSummaryTableEntry:
    def getD4PlusStr(self):
       return self.formatStr(self.d4Plus, self.d4PlusPercent)
    
-   def getGoodStr(self):
-      return self.formatStr(self.good, self.goodPercent)
-   
-   def getBadStr(self):
-      return self.formatStr(self.bad, self.badPercent)
-   
    def getDurationStr(self):
-      return self.formatStr(self.duration, self.durationPercent)
+      return str(self.duration)
    
-   def getQualityStr(self):
-      return self.formatStr(self.quality, self.qualityPercent)
+   def getFrontalStr(self):
+      return str(self.frontalProb)
+   
+   def getTemporalStr(self):
+      return str(self.temporalProb)
    
    def getLessThan3Str(self):
       return self.formatStr(self.lessThan3, self.lessThan3Percent)
@@ -354,9 +334,10 @@ def generateTables(path):
       days3 = int(lineSplit[5])
       days4Plus = int(lineSplit[6])
       duration = int(lineSplit[7])
-      quality = int(lineSplit[8])
-      collected = int(lineSplit[9])
-      newEntry = HtmlSummaryTableEntry(heading,days0,days1,days2,days3,days4Plus,duration,quality,collected)
+      frontal = int(lineSplit[8])
+      temporal = int(lineSplit[9])
+      collected = int(lineSplit[10])
+      newEntry = HtmlSummaryTableEntry(heading,days0,days1,days2,days3,days4Plus,duration,frontal, temporal,collected)
       tables[-1].addEntry(newEntry)
 
       for table in tables:
@@ -388,11 +369,10 @@ def createSummaryReport(inPath, outFolder):
    durationP: True if the collection has a duration problem, false otherwise
 """
 class MuseQualityCollection:
-    def __init__(self, path, startDateTime, qualityP, durationP):
+    def __init__(self, path, startDateTime, problems):
         self.path = path
         self.startDateTime = startDateTime
-        self.qualityProblem = "Yes" if qualityP else "No"
-        self.durationProblem = "Yes" if durationP else "No"
+        self.problems = problems
 
 
 """Summary: Stores data about a group of muse collections for a single participant
@@ -448,9 +428,8 @@ def readMuseBundlesCsv(path):
         wid = lineSplit[1]
         jpgPath = lineSplit[2]
         startDate = lineSplit[3]
-        qualityP = lineSplit[4].strip().lower() == "true"
-        durationP = lineSplit[5].strip().lower() == "true"
-        collection = MuseQualityCollection(jpgPath, startDate, qualityP, durationP)
+        problems = lineSplit[4]
+        collection = MuseQualityCollection(jpgPath, startDate, problems)
         
         # if wid different than previous, add new participant
         if(bundles[-1].getLastParticipantWid() != wid):

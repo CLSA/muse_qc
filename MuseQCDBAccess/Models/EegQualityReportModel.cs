@@ -32,21 +32,6 @@ public class EegQualityReportModel
     public string JpgPath { get; init; }
 
     /// <summary>
-    /// True if the collection was flagged for having a short duration, false otherwise
-    /// </summary>
-    public bool HasDurationProblem { get; init; }
-
-    /// <summary>
-    /// True if the collection was flagged for have an issue with the signal quality
-    /// </summary>
-    public bool HasQualityProblem { get; init; }
-
-    /// <summary>
-    /// The version of the algorithm used for determining problems
-    /// </summary>
-    public int MuseQualityVersion { get; init; }
-
-    /// <summary>
     /// The duration of the collection
     /// </summary>
     public double Duration { get; init; }
@@ -57,5 +42,42 @@ public class EegQualityReportModel
     /// The FT any quality value
     /// </summary>
     public double FtAny { get; init; }
+
+    /// <summary>
+    /// True if their was a problem with frontal or temporal contacts
+    /// </summary>
+    public bool QualityProblem => FtAny < 0.8;
+
+    /// <summary>
+    /// The F any quality value
+    /// </summary>
+    public double FAny { get; init; }
+
+    /// <summary>
+    /// True if their was a problem with the frontal contacts
+    /// </summary>
+    public bool FrontalProblem => FAny < 0.8;
+
+    /// <summary>
+    /// The T any quality value
+    /// </summary>
+    public double TAny { get; init; }
+
+    /// <summary>
+    /// True if their was a problem with the temporal contacts
+    /// </summary>
+    public bool TemporalProblem => TAny < 0.8;
+
+    /// <summary>
+    /// True if this file has any problems
+    /// </summary>
+    public bool HasProblem => LessThan5HoursDuration || QualityProblem;
+
+    /// <summary>
+    /// A string of what the problem is
+    /// </summary>
+    public string ProblemsStr => $"{(LessThan5HoursDuration ? $"Dur,": "")}" +
+        $"{(FrontalProblem ? $"Front," : "")}" +
+        $"{(TemporalProblem ? $"Temp," : "")}";
 
 }

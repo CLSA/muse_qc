@@ -127,21 +127,20 @@ public class ReportWriter
                 if (File.Exists(outCsvSiteFolder) == false) Directory.CreateDirectory(outCsvSiteFolder);
                 string outPdfSiteFolder = Path.Combine(outputPdfFolder, site);
                 if (File.Exists(outPdfSiteFolder) == false) Directory.CreateDirectory(outPdfSiteFolder);
-                string csvPath = Path.Combine(outCsvSiteFolder,$"{fileName}.csv");
+                string csvPath = Path.Combine(outCsvSiteFolder, $"{fileName}.csv");
 
                 // Create csv
                 Dictionary<bool, List<ParticipantCollectionsQualityModel>> csvInfoDict = dict[site][dateOnly];
                 using (StreamWriter sw = new(csvPath))
                 {
-                    sw.WriteLine("Section Header,Weston ID,Jpg Path,Start Date,Quality Prob,Duration Prob");
+                    sw.WriteLine("Section Header,Weston ID,Jpg Path,Start Date,Problem");
 
                     sw.WriteLine("Problems");
                     List<ParticipantCollectionsQualityModel> lessThan3DaysList = new();
                     foreach (ParticipantCollectionsQualityModel participant in csvInfoDict[true])
                     {
                         if (participant.HasLessThan3Days
-                            && participant.HasAtLeast1QualityIssue == false
-                            && participant.HasAtLeast1DurationIssue == false)
+                            && participant.HasDataProblem == false)
                         {
                             lessThan3DaysList.Add(participant);
                         }
@@ -182,7 +181,7 @@ public class ReportWriter
         p.EegQualityReportModels.OrderBy(x => x.StartDateTime);
         foreach (EegQualityReportModel eeg in p.EegQualityReportModels)
         {
-            sw.WriteLine($",{p.WestonID},{eeg.JpgPath},{eeg.StartDateTime},{eeg.HasQualityProblem},{eeg.HasDurationProblem}");
+            sw.WriteLine($",{p.WestonID},{eeg.JpgPath},{eeg.StartDateTime},{eeg.ProblemsStr}");
         }
     }
 
@@ -232,7 +231,7 @@ public class ReportWriter
         using(StreamWriter sw = new(csvPath))
         {
             // Print Header
-            sw.WriteLine("Summary Table Title,Category,0 Days,1 Days,2 Days,3 Days,4+ Days,Duration,Signal Quality,>3 Collected");
+            sw.WriteLine("Summary Table Title,Category,0 Days,1 Days,2 Days,3 Days,4+ Days,Duration,Frontal,Temporal,< 3 Collected");
 
             PrintAllTime(sw, summariesDict);
             PrintByMonth(sw, summariesDict);
@@ -274,7 +273,7 @@ public class ReportWriter
                 }
                 string dateStr = date.ToString("MMM yy");
                 toWrite += $",{dateStr},{cur.Days0},{cur.Days1},{cur.Days2},{cur.Days3},{cur.Days4Plus}," +
-                    $"{cur.DurationProblem},{cur.QualityProblem},{cur.LowFilesProblem}";
+                    $"{cur.DurationProblem},{cur.QualityFrontalProblem},{cur.QualityTemporalProblem},{cur.LowFilesProblem}";
                 sw.WriteLine(toWrite);
             }
         }
@@ -321,7 +320,7 @@ public class ReportWriter
                         toWrite += printDate.ToDateTime(TimeOnly.MinValue).ToString("MMMM yyyy");
                     }
                     toWrite += $",{key},{cur.Days0},{cur.Days1},{cur.Days2},{cur.Days3},{cur.Days4Plus}," +
-                        $"{cur.DurationProblem},{cur.QualityProblem},{cur.LowFilesProblem}";
+                        $"{cur.DurationProblem},{cur.QualityFrontalProblem},{cur.QualityTemporalProblem},{cur.LowFilesProblem}";
                     sw.WriteLine(toWrite);
                     firstPrinted = true;
                 }
@@ -351,7 +350,8 @@ public class ReportWriter
                 allTimeDict[key].Days3 += reportModel.Days3;
                 allTimeDict[key].Days4Plus += reportModel.Days4Plus;
                 allTimeDict[key].DurationProblem += reportModel.DurationProblem;
-                allTimeDict[key].QualityProblem += reportModel.QualityProblem;
+                allTimeDict[key].QualityFrontalProblem += reportModel.QualityFrontalProblem;
+                allTimeDict[key].QualityTemporalProblem += reportModel.QualityTemporalProblem;
                 allTimeDict[key].LowFilesProblem += reportModel.LowFilesProblem;
             }
         }
@@ -361,13 +361,13 @@ public class ReportWriter
         {
             QualitySummaryModel first = allTimeDict.Values.First();
             sw.WriteLine($"All FUP3 Collections Summary,{allTimeDict.Keys.First()},{first.Days0},{first.Days1},{first.Days2},{first.Days3},{first.Days4Plus}," +
-                $"{first.DurationProblem},{first.QualityProblem},{first.LowFilesProblem}");
+                $"{first.DurationProblem},{first.QualityFrontalProblem},{first.QualityTemporalProblem},{first.LowFilesProblem}");
         }
         foreach (string key in allTimeDict.Keys.Skip(1))
         {
             QualitySummaryModel cur = allTimeDict[key];
             sw.WriteLine($",{key},{cur.Days0},{cur.Days1},{cur.Days2},{cur.Days3},{cur.Days4Plus}," +
-                $"{cur.DurationProblem},{cur.QualityProblem},{cur.LowFilesProblem}");
+                $"{cur.DurationProblem},{cur.QualityFrontalProblem},{cur.QualityTemporalProblem},{cur.LowFilesProblem}");
         }
     }
 
@@ -407,8 +407,9 @@ public class ReportWriter
             else if (participant.NumberGoodDays == 2) summary.Days2++;
             else if (participant.NumberGoodDays == 1) summary.Days1++;
             else if (participant.NumberGoodDays == 0) summary.Days0++;
-            if (participant.HasAtLeast1DurationIssue) summary.DurationProblem++;
-            if (participant.HasAtLeast1QualityIssue) summary.QualityProblem++;
+            summary.DurationProblem+= participant.NumberDurationIssues;
+            summary.QualityFrontalProblem+= participant.NumberFrontalIssues;
+            summary.QualityTemporalProblem+= participant.NumberTemporalIssues;
             if (participant.HasLessThan3Days) summary.LowFilesProblem++;
         }
 

@@ -309,9 +309,9 @@ DELIMITER $$
 USE `museqcapp`$$
 CREATE PROCEDURE `get_qualityReportData`()
 BEGIN
-SELECT c.westonID, site, startDateTime, uploadDateTime, jpgPath, hasDurationProblem, hasQualityProblem, museQualityVersion, duration, ftany
+SELECT c.westonID, site, startDateTime, uploadDateTime, jpgPath, hasDurationProblem, hasQualityProblem, museQualityVersion, duration, ftany, fany, tany
 FROM museqcapp.participants as p, museqcapp.collection as c, museqcapp.qcstats as qc
 WHERE p.westonID = c.westonID AND c.collectionID = qc.collectionID AND isTest = 0;
-END
+END$$
 
 DELIMITER ;
