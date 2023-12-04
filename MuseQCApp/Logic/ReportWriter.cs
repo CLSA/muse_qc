@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using MuseQCApp.Models;
 using MuseQCDBAccess.Models;
+using System;
 using System.Diagnostics;
+using System.Security.Policy;
 
 namespace MuseQCApp.Logic;
 public class ReportWriter
@@ -121,8 +123,9 @@ public class ReportWriter
         {
             foreach (DateOnly dateOnly in dict[site].Keys)
             {
-                string monthStr = dateOnly.ToString("MMMM_yyyy");
-                string fileName = $"InDepthQualityReport_{site}_{monthStr}";
+                string yearMonthNumStr = dateOnly.ToString("yyyy_MM");
+                string monthWordStr = dateOnly.ToString("MMMM");
+                string fileName = $"InDepthQualityReport_{site}_{yearMonthNumStr}_{monthWordStr}";
                 string outCsvSiteFolder = Path.Combine(outputCsvFolder, site);
                 if (File.Exists(outCsvSiteFolder) == false) Directory.CreateDirectory(outCsvSiteFolder);
                 string outPdfSiteFolder = Path.Combine(outputPdfFolder, site);
@@ -189,22 +192,29 @@ public class ReportWriter
     /// Organizes participant Muse Quality data by site and month into a dictionary
     /// </summary>
     /// <param name="participants">Report quality data for each participant</param>
-    /// <returns>The dictionairy created</returns>
+    /// <returns>The dictionary created</returns>
     private Dictionary<string, Dictionary<DateOnly, Dictionary<bool, List<ParticipantCollectionsQualityModel>>>> CreateInDepthParticipantQualityDict
         (List<ParticipantCollectionsQualityModel> participants)
     {
         Dictionary<string, Dictionary<DateOnly, Dictionary<bool, List<ParticipantCollectionsQualityModel>>>> dict = new();
         foreach (ParticipantCollectionsQualityModel p in participants)
         {
+            string site = p.Site;
+            if(site is null)
+            {
+                Logging?.LogWarning($"Null site detected for WWID: {(p.WestonID is not null ? p.WestonID : "NULL")}");
+                site = "Missing";
+            }
+
             // Add site to dict if not added already
-            if (dict.ContainsKey(p.Site) == false)
-                dict.Add(p.Site, new());
+            if (dict.ContainsKey(site) == false)
+                dict.Add(site, new());
 
             // Add month to dict if not added already
-            if (dict[p.Site].ContainsKey(p.CollectionMonth) == false)
-                dict[p.Site].Add(p.CollectionMonth, new() { { true, new() }, { false, new() } });
+            if (dict[site].ContainsKey(p.CollectionMonth) == false)
+                dict[site].Add(p.CollectionMonth, new() { { true, new() }, { false, new() } });
 
-            dict[p.Site][p.CollectionMonth][p.HasAtleastOneProblem].Add(p);
+            dict[site][p.CollectionMonth][p.HasAtleastOneProblem].Add(p);
         }
         return dict;
     }
@@ -220,8 +230,9 @@ public class ReportWriter
     {
         DateOnly lastMonth = DateOnly.FromDateTime(DateTime.Now.AddMonths(-1));
         lastMonth = lastMonth.AddDays(1 - lastMonth.Day).AddMonths(1).AddDays(-1);
-        string lastMonthStr = lastMonth.ToString("MMMM_yyyy");
-        string fileName = $"QualityReport_{lastMonthStr}";
+        string yearMonthNumStr = lastMonth.ToString("yyyy_MM");
+        string monthWordStr = lastMonth.ToString("MMMM");
+        string fileName = $"QualityReport_{yearMonthNumStr}_{monthWordStr}";
         string csvPath = Path.Combine(summaryCsvFolder, $"{fileName}.csv");
 
         if (File.Exists(csvPath)) return;
