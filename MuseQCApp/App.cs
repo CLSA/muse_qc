@@ -404,11 +404,22 @@ public class App
     private void UpdateParticipantSiteInfo()
     {
         string? lookupTablePath = ConfigHelper.GetSiteLookupTableCsvPath();
-        if (lookupTablePath != null)
+
+        // Do nothing if their is no path for where the lookup table should be
+        if (lookupTablePath == null) return;
+
+        // Get participant sites from Cenozo
+        string? cenozoCredentials = ConfigHelper.GetCenozoRequestCredentials();
+        string? cenozoSiteLookupURL = ConfigHelper.GetCenozoSiteLookupURL();
+        if(string.IsNullOrEmpty(cenozoCredentials) == false && string.IsNullOrEmpty(cenozoSiteLookupURL) == false)
         {
-            List<ParticipantModel> participants = SiteLookupTable.ReadSiteLookupTableCsv(lookupTablePath, Logging);
-            DbMethods.UpdateParticipantSites(participants);
+            // Create new csv containing updated participant site information
+            CenozoApiCalls.UpdateSiteLookupCsv(cenozoCredentials, cenozoSiteLookupURL, lookupTablePath);
         }
+
+        // Update participant site in DB
+        List<ParticipantModel> participants = SiteLookupTable.ReadSiteLookupTableCsv(lookupTablePath, Logging);
+        DbMethods.UpdateParticipantSites(participants);
     }
 
     #endregion

@@ -213,10 +213,16 @@ public static class SiteLookupTable
 
         // Check if site formatted as expected
         string siteLong = lineSplit[1];
+        if (string.IsNullOrWhiteSpace(siteLong))
+        {
+            logger?.LogError($"No information about the DCS site in lookup table csv for {westonID}");
+            return null;
+        }
+
         string siteShort = GetSiteShortForm(siteLong);
         if (string.IsNullOrWhiteSpace(siteShort))
         {
-            logger?.LogError($"Could not identify the DCS site in lookup table csv from the string {siteLong}");
+            logger?.LogError($"Could not identify the DCS site in lookup table csv from the string {siteLong}. Csv line: {lookupLine}");
             return null;
         }
 

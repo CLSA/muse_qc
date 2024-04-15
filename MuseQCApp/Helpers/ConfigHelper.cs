@@ -252,6 +252,24 @@ public class ConfigHelper
         return path;
     }
 
+    /// <summary>
+    /// Get the user credentials to use when making requests to cenozo
+    /// </summary>
+    /// <returns>The password</returns>
+    public string? GetCenozoRequestCredentials()
+    {
+        return GetStringFromConfig("Cenozo:RequestUserCredentials"); ;
+    }
+
+    /// <summary>
+    /// Get the URL to use when accessing information about participant sites from cenozo
+    /// </summary>
+    /// <returns>The password</returns>
+    public string? GetCenozoSiteLookupURL()
+    {
+        return GetStringFromConfig("Cenozo:SiteLookupURL"); ;
+    }
+
     #endregion
 
     #region Private methods
